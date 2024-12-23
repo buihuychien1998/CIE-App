@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:home/models/proposal_response.dart';
 
+
 class ReportVersionScreen extends StatefulWidget {
   final Proposal proposal;
 
@@ -12,19 +13,22 @@ class ReportVersionScreen extends StatefulWidget {
 
 class _ReportVersionScreenState extends State<ReportVersionScreen> {
   bool _isEditing = false;
-  TextEditingController _nameController =
-      TextEditingController(text: 'Tên tờ trình');
-  TextEditingController _codeController = TextEditingController(text: 'Mã số');
-  TextEditingController _dateController = TextEditingController(text: 'Ngày');
-  TextEditingController _signerController =
-      TextEditingController(text: 'Người ký');
-  TextEditingController _fwdController = TextEditingController(text: 'FWD');
-
+  late List<TextEditingController> _nameControllers;
+  late List<TextEditingController> _codeControllers;
+  late List<TextEditingController> _dateControllers;
+  late List<TextEditingController> _signerControllers;
+  late List<TextEditingController> _fwdControllers;
 
   @override
   void initState() {
     super.initState();
 
+    // Initialize controllers with the proposal versions data
+    _nameControllers = widget.proposal.version?.map((v) => TextEditingController(text: v.nameVersion ?? '')).toList() ?? [];
+    _codeControllers = widget.proposal.version?.map((v) => TextEditingController(text: v.proposalCode ?? '')).toList() ?? [];
+    _dateControllers = widget.proposal.version?.map((v) => TextEditingController(text: v.dateVersionCreated ?? '')).toList() ?? [];
+    _signerControllers = widget.proposal.version?.map((v) => TextEditingController(text: v.signerVersion ?? '')).toList() ?? [];
+    _fwdControllers = widget.proposal.version?.map((v) => TextEditingController(text: v.fwd ?? '')).toList() ?? [];
   }
 
   @override
@@ -55,37 +59,27 @@ class _ReportVersionScreenState extends State<ReportVersionScreen> {
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 3,
-            color: Colors.grey[300],
-          ),
-          SizedBox(height: 16),
-          Padding(
+      body: ListView.builder(
+        itemCount: widget.proposal.version?.length ?? 0,
+        itemBuilder: (context, index) {
+          return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Mục Tên tờ trình
-                Text(
-                  'Tên tờ trình',
-                  style: TextStyle(fontSize: 16),
-                ),
+                // Tên tờ trình
+                Text('Tên tờ trình', style: TextStyle(fontSize: 16)),
                 SizedBox(height: 8),
                 Container(
-                  constraints: BoxConstraints(
-                    minHeight: 42,
-                  ),
+                  constraints: BoxConstraints(minHeight: 42),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey),
                     borderRadius: BorderRadius.circular(4),
                     color: Colors.white,
                   ),
                   child: TextField(
-                    controller: _nameController,
-                    enabled: _isEditing,
+                    controller: _nameControllers[index],
+                    enabled: _isEditing, // or toggle based on editing state
                     maxLines: null,
                     minLines: 1,
                     decoration: InputDecoration(
@@ -97,15 +91,12 @@ class _ReportVersionScreenState extends State<ReportVersionScreen> {
                 ),
                 SizedBox(height: 16),
 
-                // Mục Mã số
+                // Mã số
                 Row(
                   children: [
                     Expanded(
                       flex: 2,
-                      child: Text(
-                        'Mã số',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                      child: Text('Mã số', style: TextStyle(fontSize: 16)),
                     ),
                     Expanded(
                       flex: 5,
@@ -117,13 +108,11 @@ class _ReportVersionScreenState extends State<ReportVersionScreen> {
                           color: Colors.white,
                         ),
                         child: TextField(
-                          controller: _codeController,
-                          enabled: _isEditing,
-                          // Chỉ cho phép chỉnh sửa khi _isEditing là true
+                          controller: _codeControllers[index],
+                          enabled: false, // or toggle based on editing state
                           maxLines: 1,
                           decoration: InputDecoration(
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 8.0),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
                             border: InputBorder.none,
                             hintText: 'Nhập mã số',
                           ),
@@ -135,15 +124,12 @@ class _ReportVersionScreenState extends State<ReportVersionScreen> {
                 ),
                 SizedBox(height: 16),
 
-                // Mục Ngày
+                // Ngày
                 Row(
                   children: [
                     Expanded(
                       flex: 2,
-                      child: Text(
-                        'Ngày',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                      child: Text('Ngày', style: TextStyle(fontSize: 16)),
                     ),
                     Expanded(
                       flex: 5,
@@ -155,12 +141,11 @@ class _ReportVersionScreenState extends State<ReportVersionScreen> {
                           color: Colors.white,
                         ),
                         child: TextField(
-                          controller: _dateController,
-                          enabled: _isEditing,
+                          controller: _dateControllers[index],
+                          enabled: _isEditing, // or toggle based on editing state
                           maxLines: 1,
                           decoration: InputDecoration(
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 8.0),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
                             border: InputBorder.none,
                             hintText: 'Nhập ngày',
                           ),
@@ -172,15 +157,12 @@ class _ReportVersionScreenState extends State<ReportVersionScreen> {
                 ),
                 SizedBox(height: 16),
 
-                // Mục Người ký
+                // Người ký
                 Row(
                   children: [
                     Expanded(
                       flex: 2,
-                      child: Text(
-                        'Người ký',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                      child: Text('Người ký', style: TextStyle(fontSize: 16)),
                     ),
                     Expanded(
                       flex: 5,
@@ -192,12 +174,11 @@ class _ReportVersionScreenState extends State<ReportVersionScreen> {
                           color: Colors.white,
                         ),
                         child: TextField(
-                          controller: _signerController,
-                          enabled: _isEditing,
+                          controller: _signerControllers[index],
+                          enabled: _isEditing, // or toggle based on editing state
                           maxLines: 1,
                           decoration: InputDecoration(
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 8.0),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
                             border: InputBorder.none,
                             hintText: 'Nhập người ký',
                           ),
@@ -209,15 +190,12 @@ class _ReportVersionScreenState extends State<ReportVersionScreen> {
                 ),
                 SizedBox(height: 16),
 
-                // Mục FWD
+                // FWD
                 Row(
                   children: [
                     Expanded(
                       flex: 2,
-                      child: Text(
-                        'FWD',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                      child: Text('FWD', style: TextStyle(fontSize: 16)),
                     ),
                     Expanded(
                       flex: 5,
@@ -229,13 +207,11 @@ class _ReportVersionScreenState extends State<ReportVersionScreen> {
                           color: Colors.white,
                         ),
                         child: TextField(
-                          controller: _fwdController,
-                          enabled: _isEditing,
-                          // Chỉ cho phép chỉnh sửa khi _isEditing là true
+                          controller: _fwdControllers[index],
+                          enabled: _isEditing, // or toggle based on editing state
                           maxLines: 1,
                           decoration: InputDecoration(
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 8.0),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
                             border: InputBorder.none,
                             hintText: 'Nhập FWD',
                           ),
@@ -247,9 +223,10 @@ class _ReportVersionScreenState extends State<ReportVersionScreen> {
                 ),
               ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 }
+

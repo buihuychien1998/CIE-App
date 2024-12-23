@@ -137,12 +137,10 @@ class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
           onApplyFilter: (filters) {
             setState(() {
               _filteredRows = _rows?.where((row) {
-                // bool matchesStatus =
-                //     filters['status'] == '' || row..contains(filters['status']!);
-                // bool matchesSigner =
-                //     filters['signer'] == '' || row?.contains(filters['signer']!);
-                // return matchesStatus && matchesSigner;
-                return true;
+                bool matchesStatus = row.status == filters['status']!;
+                bool matchesSigner = row.signer?.contains(filters['signer']!) ?? false;
+                // bool matchesSigner = row.signer?.contains(filters['signer']!) ?? false;
+                return matchesStatus && matchesSigner;
               }).toList();
             });
           },
