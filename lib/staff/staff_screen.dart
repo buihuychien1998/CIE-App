@@ -4,7 +4,7 @@ import 'package:home/home/search_home.dart';
 import 'package:home/models/employee_response.dart';
 import 'package:home/report/report_screen.dart';
 import 'package:home/topic/topic_screen.dart';
-import 'package:home/staff/staff_detail.dart';
+import 'package:home/staff/staff_detail_screen.dart';
 import 'package:home/staff/staff_filter.dart';
 import 'package:home/staff/staff_create_screen.dart';
 
@@ -38,16 +38,17 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
     });
   }
 
-  void _navigateToDetailPage(BuildContext context, Employee? title) {
-    if (title == null) return;
-    Navigator.push(
+  void _navigateToDetailPage(BuildContext context, Employee? staff) async{
+    if (staff == null) return;
+    await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => StaffDetail(
-          staffTitle: title,
+        builder: (context) => StaffDetailScreen(
+          staff: staff,
         ),
       ),
     );
+    getAllEmployee();
   }
 
   void _showDeleteConfirmationSheet(BuildContext context, int index) {
@@ -478,6 +479,7 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
       progressStream.add(false);
     }
   }
+
   Future<void> deleteStaff() async {
     showLoading();
     // Lấy dữ liệu từ form

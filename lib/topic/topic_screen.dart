@@ -3,9 +3,9 @@ import 'package:home/home/dashboard_screen.dart';
 import 'package:home/home/search_home.dart';
 import 'package:home/models/topic_response.dart';
 import 'package:home/report/report_screen.dart';
-import 'package:home/topic/topic_detail.dart';
+import 'package:home/topic/topic_detail_screen.dart';
 import 'package:home/topic/topic_filter.dart';
-import 'package:home/topic/create_topic_screen.dart';
+import 'package:home/topic/topic_create_screen.dart';
 import 'package:home/staff/staff_screen.dart';
 
 import '../base/api_url.dart';
@@ -38,9 +38,9 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
     });
   }
 
-  void _navigateToDetailPage(BuildContext context, Topic? topic) {
+  void _navigateToDetailPage(BuildContext context, Topic? topic) async{
     if (topic == null) return;
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => TopicDetailScreen(
@@ -48,6 +48,7 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
         ),
       ),
     );
+    getAllTopic();
   }
 
   void _showDeleteConfirmationSheet(BuildContext context, int index) {
@@ -418,7 +419,7 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
               var result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => CreateTopicScreen(),
+                  builder: (context) => TopicCreateScreen(),
                 ),
               );
               if (result) {

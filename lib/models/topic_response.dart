@@ -55,19 +55,20 @@ TopicResponse copyWith({  List<Topic>? topic,
 
 class Topic {
   Topic({
-      num? id, 
-      String? nameTopic, 
-      String? topicCode, 
-      String? version, 
-      String? type, 
-      String? unit, 
-      String? levelManager, 
-      String? burget, 
-      String? year, 
-      dynamic linkFileExplanation, 
-      dynamic linkFileOutline, 
-      dynamic linkFileReport, 
-      List<Student>? student,}){
+    num? id,
+    String? nameTopic,
+    String? topicCode,
+    String? version,
+    String? type,
+    String? unit,
+    String? levelManager,
+    String? burget,
+    String? year,
+    dynamic linkFileExplanation,
+    dynamic linkFileOutline,
+    dynamic linkFileReport,
+    List<Student>? student,
+  }) {
     _id = id;
     _nameTopic = nameTopic;
     _topicCode = topicCode;
@@ -81,7 +82,7 @@ class Topic {
     _linkFileOutline = linkFileOutline;
     _linkFileReport = linkFileReport;
     _student = student;
-}
+  }
 
   Topic.fromJson(dynamic json) {
     _id = json['id'];
@@ -103,6 +104,7 @@ class Topic {
       });
     }
   }
+
   num? _id;
   String? _nameTopic;
   String? _topicCode;
@@ -116,33 +118,92 @@ class Topic {
   dynamic _linkFileOutline;
   dynamic _linkFileReport;
   List<Student>? _student;
-Topic copyWith({  num? id,
-  String? nameTopic,
-  String? topicCode,
-  String? version,
-  String? type,
-  String? unit,
-  String? levelManager,
-  String? burget,
-  String? year,
-  dynamic linkFileExplanation,
-  dynamic linkFileOutline,
-  dynamic linkFileReport,
-  List<Student>? student,
-}) => Topic(  id: id ?? _id,
-  nameTopic: nameTopic ?? _nameTopic,
-  topicCode: topicCode ?? _topicCode,
-  version: version ?? _version,
-  type: type ?? _type,
-  unit: unit ?? _unit,
-  levelManager: levelManager ?? _levelManager,
-  burget: burget ?? _burget,
-  year: year ?? _year,
-  linkFileExplanation: linkFileExplanation ?? _linkFileExplanation,
-  linkFileOutline: linkFileOutline ?? _linkFileOutline,
-  linkFileReport: linkFileReport ?? _linkFileReport,
-  student: student ?? _student,
-);
+
+  // Setters
+  set id(num? value) {
+    _id = value;
+  }
+
+  set nameTopic(String? value) {
+    _nameTopic = value;
+  }
+
+  set topicCode(String? value) {
+    _topicCode = value;
+  }
+
+  set version(String? value) {
+    _version = value;
+  }
+
+  set type(String? value) {
+    _type = value;
+  }
+
+  set unit(String? value) {
+    _unit = value;
+  }
+
+  set levelManager(String? value) {
+    _levelManager = value;
+  }
+
+  set burget(String? value) {
+    _burget = value;
+  }
+
+  set year(String? value) {
+    _year = value;
+  }
+
+  set linkFileExplanation(dynamic value) {
+    _linkFileExplanation = value;
+  }
+
+  set linkFileOutline(dynamic value) {
+    _linkFileOutline = value;
+  }
+
+  set linkFileReport(dynamic value) {
+    _linkFileReport = value;
+  }
+
+  set student(List<Student>? value) {
+    _student = value;
+  }
+
+  Topic copyWith({
+    num? id,
+    String? nameTopic,
+    String? topicCode,
+    String? version,
+    String? type,
+    String? unit,
+    String? levelManager,
+    String? burget,
+    String? year,
+    dynamic linkFileExplanation,
+    dynamic linkFileOutline,
+    dynamic linkFileReport,
+    List<Student>? student,
+  }) {
+    return Topic(
+      id: id ?? _id,
+      nameTopic: nameTopic ?? _nameTopic,
+      topicCode: topicCode ?? _topicCode,
+      version: version ?? _version,
+      type: type ?? _type,
+      unit: unit ?? _unit,
+      levelManager: levelManager ?? _levelManager,
+      burget: burget ?? _burget,
+      year: year ?? _year,
+      linkFileExplanation: linkFileExplanation ?? _linkFileExplanation,
+      linkFileOutline: linkFileOutline ?? _linkFileOutline,
+      linkFileReport: linkFileReport ?? _linkFileReport,
+      student: student ?? _student,
+    );
+  }
+
   num? get id => _id;
   String? get nameTopic => _nameTopic;
   String? get topicCode => _topicCode;
@@ -176,7 +237,6 @@ Topic copyWith({  num? id,
     }
     return map;
   }
-
 }
 
 /// id : 1
@@ -187,17 +247,18 @@ Topic copyWith({  num? id,
 
 class Student {
   Student({
-      num? id, 
-      String? fullname, 
-      String? studentCode, 
-      String? positionName, 
-      String? topicCode,}){
+    num? id,
+    String? fullname,
+    String? studentCode,
+    String? positionName,
+    String? topicCode,
+  }) {
     _id = id;
     _fullname = fullname;
     _studentCode = studentCode;
     _positionName = positionName;
     _topicCode = topicCode;
-}
+  }
 
   Student.fromJson(dynamic json) {
     _id = json['id'];
@@ -206,22 +267,50 @@ class Student {
     _positionName = json['position_name'];
     _topicCode = json['topic_code'];
   }
+
   num? _id;
   String? _fullname;
   String? _studentCode;
   String? _positionName;
   String? _topicCode;
-Student copyWith({  num? id,
-  String? fullname,
-  String? studentCode,
-  String? positionName,
-  String? topicCode,
-}) => Student(  id: id ?? _id,
-  fullname: fullname ?? _fullname,
-  studentCode: studentCode ?? _studentCode,
-  positionName: positionName ?? _positionName,
-  topicCode: topicCode ?? _topicCode,
-);
+
+  // Setters
+  set id(num? value) {
+    _id = value;
+  }
+
+  set fullname(String? value) {
+    _fullname = value;
+  }
+
+  set studentCode(String? value) {
+    _studentCode = value;
+  }
+
+  set positionName(String? value) {
+    _positionName = value;
+  }
+
+  set topicCode(String? value) {
+    _topicCode = value;
+  }
+
+  Student copyWith({
+    num? id,
+    String? fullname,
+    String? studentCode,
+    String? positionName,
+    String? topicCode,
+  }) {
+    return Student(
+      id: id ?? _id,
+      fullname: fullname ?? _fullname,
+      studentCode: studentCode ?? _studentCode,
+      positionName: positionName ?? _positionName,
+      topicCode: topicCode ?? _topicCode,
+    );
+  }
+
   num? get id => _id;
   String? get fullname => _fullname;
   String? get studentCode => _studentCode;
@@ -237,5 +326,4 @@ Student copyWith({  num? id,
     map['topic_code'] = _topicCode;
     return map;
   }
-
 }

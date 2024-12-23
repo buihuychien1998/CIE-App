@@ -1,24 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:home/models/proposal_response.dart';
 
-class EmploymentInformation extends StatefulWidget {
+class ReportVersionScreen extends StatefulWidget {
+  final Proposal proposal;
+
+  const ReportVersionScreen({super.key, required this.proposal});
+
   @override
-  _EmploymentInformationState createState() => _EmploymentInformationState();
+  _ReportVersionScreenState createState() => _ReportVersionScreenState();
 }
 
-class _EmploymentInformationState extends State<EmploymentInformation> {
+class _ReportVersionScreenState extends State<ReportVersionScreen> {
   bool _isEditing = false;
-  TextEditingController _nameController = TextEditingController(text: 'Ngày');
-  TextEditingController _codeController = TextEditingController(text: 'Ngày');
-  TextEditingController _dateController = TextEditingController(text: 'Bậc');
-  TextEditingController _signerController = TextEditingController(text: 'Hệ số');
-  TextEditingController _fwdController = TextEditingController(text: 'Phụ cấp');
+  TextEditingController _nameController =
+      TextEditingController(text: 'Tên tờ trình');
+  TextEditingController _codeController = TextEditingController(text: 'Mã số');
+  TextEditingController _dateController = TextEditingController(text: 'Ngày');
+  TextEditingController _signerController =
+      TextEditingController(text: 'Người ký');
+  TextEditingController _fwdController = TextEditingController(text: 'FWD');
+
+
+  @override
+  void initState() {
+    super.initState();
+
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Thông tin tuyển dụng', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+        title: Text(
+          'Phiên bản tờ trình',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
@@ -28,7 +45,8 @@ class _EmploymentInformationState extends State<EmploymentInformation> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.edit_outlined, color: _isEditing ? Colors.blue : Colors.grey),
+            icon: Icon(Icons.edit_outlined,
+                color: _isEditing ? Colors.blue : Colors.grey),
             onPressed: () {
               setState(() {
                 _isEditing = !_isEditing;
@@ -50,49 +68,42 @@ class _EmploymentInformationState extends State<EmploymentInformation> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Mục Ngày tuyển
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'Ngày tuyển',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                // Mục Tên tờ trình
+                Text(
+                  'Tên tờ trình',
+                  style: TextStyle(fontSize: 16),
+                ),
+                SizedBox(height: 8),
+                Container(
+                  constraints: BoxConstraints(
+                    minHeight: 42,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.white,
+                  ),
+                  child: TextField(
+                    controller: _nameController,
+                    enabled: _isEditing,
+                    maxLines: null,
+                    minLines: 1,
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
+                      border: InputBorder.none,
                     ),
-                    Expanded(
-                      flex: 5,
-                      child: Container(
-                        constraints: BoxConstraints(minHeight: 42),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(4),
-                          color: Colors.white,
-                        ),
-                        child: TextField(
-                          controller: _nameController,
-                          enabled: _isEditing, // Chỉ cho phép chỉnh sửa khi _isEditing là true
-                          maxLines: 1,
-                          decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
-                            border: InputBorder.none,
-                            hintText: 'Nhập ngày',
-                          ),
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      ),
-                    ),
-                  ],
+                    style: TextStyle(fontSize: 14),
+                  ),
                 ),
                 SizedBox(height: 16),
 
-                // Mục ngày huởng
+                // Mục Mã số
                 Row(
                   children: [
                     Expanded(
                       flex: 2,
                       child: Text(
-                        'Ngày hưởng',
+                        'Mã số',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
@@ -107,12 +118,14 @@ class _EmploymentInformationState extends State<EmploymentInformation> {
                         ),
                         child: TextField(
                           controller: _codeController,
-                          enabled: _isEditing, // Chỉ cho phép chỉnh sửa khi _isEditing là true
+                          enabled: _isEditing,
+                          // Chỉ cho phép chỉnh sửa khi _isEditing là true
                           maxLines: 1,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
+                            contentPadding:
+                                EdgeInsets.symmetric(horizontal: 8.0),
                             border: InputBorder.none,
-                            hintText: 'Nhập ngày',
+                            hintText: 'Nhập mã số',
                           ),
                           style: TextStyle(fontSize: 14),
                         ),
@@ -122,13 +135,13 @@ class _EmploymentInformationState extends State<EmploymentInformation> {
                 ),
                 SizedBox(height: 16),
 
-                // Mục bậc lương
+                // Mục Ngày
                 Row(
                   children: [
                     Expanded(
                       flex: 2,
                       child: Text(
-                        'Bậc lương',
+                        'Ngày',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
@@ -146,9 +159,10 @@ class _EmploymentInformationState extends State<EmploymentInformation> {
                           enabled: _isEditing,
                           maxLines: 1,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
+                            contentPadding:
+                                EdgeInsets.symmetric(horizontal: 8.0),
                             border: InputBorder.none,
-                            hintText: 'Nhập bậc lương',
+                            hintText: 'Nhập ngày',
                           ),
                           style: TextStyle(fontSize: 14),
                         ),
@@ -158,13 +172,13 @@ class _EmploymentInformationState extends State<EmploymentInformation> {
                 ),
                 SizedBox(height: 16),
 
-                // Mục hệ số
+                // Mục Người ký
                 Row(
                   children: [
                     Expanded(
                       flex: 2,
                       child: Text(
-                        'Hệ số',
+                        'Người ký',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
@@ -182,9 +196,10 @@ class _EmploymentInformationState extends State<EmploymentInformation> {
                           enabled: _isEditing,
                           maxLines: 1,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
+                            contentPadding:
+                                EdgeInsets.symmetric(horizontal: 8.0),
                             border: InputBorder.none,
-                            hintText: 'Nhập hệ số',
+                            hintText: 'Nhập người ký',
                           ),
                           style: TextStyle(fontSize: 14),
                         ),
@@ -194,13 +209,13 @@ class _EmploymentInformationState extends State<EmploymentInformation> {
                 ),
                 SizedBox(height: 16),
 
-                // Mục phụ cấp
+                // Mục FWD
                 Row(
                   children: [
                     Expanded(
                       flex: 2,
                       child: Text(
-                        'Phụ cấp',
+                        'FWD',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
@@ -215,12 +230,14 @@ class _EmploymentInformationState extends State<EmploymentInformation> {
                         ),
                         child: TextField(
                           controller: _fwdController,
-                          enabled: _isEditing, // Chỉ cho phép chỉnh sửa khi _isEditing là true
+                          enabled: _isEditing,
+                          // Chỉ cho phép chỉnh sửa khi _isEditing là true
                           maxLines: 1,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
+                            contentPadding:
+                                EdgeInsets.symmetric(horizontal: 8.0),
                             border: InputBorder.none,
-                            hintText: 'Nhập phụ cấp',
+                            hintText: 'Nhập FWD',
                           ),
                           style: TextStyle(fontSize: 14),
                         ),

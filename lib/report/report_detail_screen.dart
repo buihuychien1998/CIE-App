@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:home/models/proposal_response.dart';
 import 'package:home/report/report_information_screen.dart';
-import 'package:home/report/version_report.dart';
+import 'package:home/report/report_version_screen.dart';
 import 'package:home/report/doc_report.dart';
 
 class ReportDetailScreen extends StatefulWidget {
-  final Proposal proposal;
+  late Proposal proposal;
 
-  const ReportDetailScreen({super.key, required this.proposal});
+  ReportDetailScreen({super.key, required this.proposal});
 
   @override
   _ReportDetailScreenState createState() => _ReportDetailScreenState();
@@ -49,13 +49,17 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             children: [
               const SizedBox(height: 25),
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async{
+                  final updatedProposal = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ReportInformationScreen(proposal: widget.proposal,),
                     ),
                   );
+
+                  setState(() {
+                    widget.proposal = updatedProposal;
+                  });
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -82,7 +86,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ReportVersionScreen(),
+                      builder: (context) => ReportVersionScreen(proposal: widget.proposal,),
                     ),
                   );
                 },

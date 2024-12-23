@@ -3,23 +3,20 @@ import 'package:home/home/dashboard_screen.dart';
 import 'package:home/models/employee_response.dart';
 import 'package:home/report/report_screen.dart';
 import 'package:home/staff/staff_screen.dart';
-import 'package:home/staff/employment_information.dart';
+import 'package:home/staff/staff_recruitment_screen.dart';
 import 'package:home/staff/personal_doc.dart';
-import 'package:home/staff/personal_information.dart';
-import 'package:home/topic/topic_screen.dart';
+import 'package:home/staff/staff_personal_information_screen.dart';
 
-class StaffDetail extends StatefulWidget {
-  final Employee staffTitle;
+class StaffDetailScreen extends StatefulWidget {
+  late Employee staff;
 
-  const StaffDetail({Key? key, required this.staffTitle}) : super(key: key);
+  StaffDetailScreen({super.key, required this.staff});
 
   @override
-  _StaffDetailState createState() => _StaffDetailState();
+  _StaffDetailScreenState createState() => _StaffDetailScreenState();
 }
 
-class _StaffDetailState extends State<StaffDetail> {
-  int _selectedIndex = 3;
-
+class _StaffDetailScreenState extends State<StaffDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,7 +25,7 @@ class _StaffDetailState extends State<StaffDetail> {
         title: Padding(
           padding: const EdgeInsets.only(top: 4.0, left: 20.0),
           child: Text(
-            'Hồ sơ nhân viên ${widget.staffTitle}',
+            'Hồ sơ nhân viên ${widget.staff.employCode}',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -54,13 +51,20 @@ class _StaffDetailState extends State<StaffDetail> {
             children: [
               const SizedBox(height: 25),
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async{
+                  final updatedStaff = await Navigator.push<Employee>(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PersonalInformation(),
+                      builder: (context) => StaffPersonalInformationScreen(employee: widget.staff),
                     ),
                   );
+
+                  // If the updated topic is not null, update the current model
+                  if (updatedStaff != null) {
+                    setState(() {
+                      widget.staff = updatedStaff;  // Update the original topic with the updated one
+                    });
+                  }
                 },
                 child: Container(
                   padding: EdgeInsets.symmetric(vertical: 12, horizontal: 13),
@@ -84,13 +88,20 @@ class _StaffDetailState extends State<StaffDetail> {
               ),
               const SizedBox(height: 20),
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async{
+                  final updatedStaff = await Navigator.push<Employee>(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EmploymentInformation(),
+                      builder: (context) => StaffRecruitmentScreen(employee: widget.staff),
                     ),
                   );
+
+                  // If the updated topic is not null, update the current model
+                  if (updatedStaff != null) {
+                    setState(() {
+                      widget.staff = updatedStaff;  // Update the original topic with the updated one
+                    });
+                  }
                 },
                 child: Container(
                   padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),

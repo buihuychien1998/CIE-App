@@ -17,7 +17,8 @@ import '../models/proposal_create_response.dart';
 final ValueNotifier<String> sharedProposalCode = ValueNotifier('');
 final ValueNotifier<DataCreate> sharedProposalInformation =
     ValueNotifier(DataCreate());
-final ValueNotifier<Version> sharedProposalVersion = ValueNotifier(Version());
+// final ValueNotifier<Version> sharedProposalVersion = ValueNotifier(Version());
+final ValueNotifier<List<Version>> sharedProposalVersions = ValueNotifier([]);
 
 class ReportCreateScreen extends StatefulWidget {
   final List<Employee> employee;
@@ -128,7 +129,10 @@ class _ReportCreateScreenState extends State<ReportCreateScreen>
 
   void clearData() {
     sharedProposalInformation.value = DataCreate(); // Clear data
-    sharedProposalInformation.notifyListeners(); // Notify listeners to update UI
+    sharedProposalInformation
+        .notifyListeners(); // Notify listeners to update UI
+    sharedProposalVersions.value = []; // Clear data
+    sharedProposalVersions.notifyListeners(); // Notify listeners to update UI
   }
 
   Future<void> createProposal() async {
@@ -138,7 +142,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen>
       final body = ProposalCreateRequest();
       body.dataCreate = sharedProposalInformation.value;
       body.version ??= [];
-      body.version?.add(sharedProposalVersion.value);
+      body.version?.addAll(sharedProposalVersions.value);
       final data = await apiService.post(ApiUrl.post_create_proposal(),
           body: body.toJson());
 
@@ -466,7 +470,8 @@ class _InformationTabState extends State<InformationTab>
     with AutomaticKeepAliveClientMixin {
   final TextEditingController _proposalNameController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
-  String _selectedDate = ''; // Use String variable instead of TextEditingController
+  String _selectedDate =
+      ''; // Use String variable instead of TextEditingController
   String? _status;
   Employee? _selectedEmployee;
 
@@ -801,82 +806,73 @@ class VersionTab extends StatefulWidget {
 
 class _VersionTabState extends State<VersionTab>
     with AutomaticKeepAliveClientMixin {
-  final TextEditingController _versionNameController = TextEditingController();
-  final TextEditingController _codeController = TextEditingController();
-  final TextEditingController _versionSignerController =
-      TextEditingController();
-  final TextEditingController _versionFWDController = TextEditingController();
-  String _selectedDate = '';
-
   @override
-  void initState() {
-    super.initState();
-    // Thêm listener cho controllers
-    _versionNameController.addListener(() {
-      sharedProposalVersion.value.nameVersion = _versionNameController.text;
-      sharedProposalVersion.notifyListeners();
-    });
-    _versionSignerController.addListener(() {
-      sharedProposalVersion.value.signerVersion = _versionSignerController.text;
-      sharedProposalVersion.notifyListeners();
-    });
-    _versionFWDController.addListener(() {
-      sharedProposalVersion.value.fwd = _versionFWDController.text;
-      sharedProposalVersion.notifyListeners();
-    });
-  }
-
-  @override
-  void dispose() {
-    _versionNameController.dispose();
-    _versionSignerController.dispose();
-    _versionFWDController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime currentDate = DateTime.now();
-    DateTime? selectedDate = await showDatePicker(
-      context: context,
-      initialDate: currentDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-      builder: (BuildContext context, Widget? child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.blue,
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
+  Widget build(BuildContext context) {
+    super.build(context);
+    return ValueListenableBuilder<List<Version>>(
+      valueListenable: sharedProposalVersions,
+      builder: (context, versions, child) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (int i = 0; i < versions.length; i++)
+                _buildVersionItem(i),
+              if (versions.isNotEmpty) SizedBox(height: 10),
+              SizedBox(height: 16),
+              if (versions.isNotEmpty)
+                Divider(color: Colors.grey, thickness: 1),
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.add,
+                        color: Colors.blue,
+                        size: 20,
+                      ),
+                      onPressed: _addVersion,
+                    ),
+                    SizedBox(width: 0.1),
+                    TextButton(
+                      onPressed: _addVersion,
+                      child: Text(
+                        'Thêm',
+                        style: TextStyle(color: Colors.blue, fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          child: child!,
         );
       },
     );
-    if (selectedDate != null && selectedDate != currentDate) {
-      setState(() {
-        _selectedDate = DateFormat('dd/MM/yyyy').format(selectedDate);
-        sharedProposalVersion.value.dateVersionCreated = _selectedDate;
-        sharedProposalVersion.notifyListeners();
-      });
-    }
   }
 
-  void _checkCompletion() {
-    final addReportState =
-        context.findAncestorStateOfType<_ReportCreateScreenState>();
-    addReportState?._checkCompletion();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
+  Widget _buildVersionItem(int index) {
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Phiên bản ${index + 1}',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.do_not_disturb_on,
+                  color: Colors.red,
+                ),
+                onPressed: () => _removeVersion(index),
+              ),
+            ],
+          ),
           // Phần "Tên phiên bản"
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -887,12 +883,13 @@ class _VersionTabState extends State<VersionTab>
               ),
               SizedBox(height: 8),
               TextField(
-                controller: _versionNameController,
+                onChanged: (value) {
+                  sharedProposalVersions.value[index].nameVersion = value;
+                  sharedProposalVersions.notifyListeners();
+                },
+                controller: TextEditingController(text: sharedProposalVersions.value[index].nameVersion ?? ''),
                 maxLines: null,
-                style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF272727)),
+                style: const TextStyle(fontSize: 16, color: Color(0xFF272727)),
                 decoration: InputDecoration(
                   hintText: 'Nhập tên tờ trình',
                   hintStyle: TextStyle(fontSize: 14, color: Colors.grey[400]),
@@ -903,7 +900,6 @@ class _VersionTabState extends State<VersionTab>
             ],
           ),
           SizedBox(height: 16),
-
           // Mục Mã số
           Row(
             children: [
@@ -919,9 +915,9 @@ class _VersionTabState extends State<VersionTab>
                 child: ValueListenableBuilder(
                     valueListenable: sharedProposalCode,
                     builder: (context, value, child) {
-                      _codeController.text = sharedProposalCode.value;
                       return TextField(
-                          controller: _codeController,
+                          controller: TextEditingController(
+                              text: sharedProposalCode.value),
                           enabled: false,
                           style: TextStyle(
                               fontSize: 16,
@@ -938,59 +934,16 @@ class _VersionTabState extends State<VersionTab>
             ],
           ),
           SizedBox(height: 16),
-
-          // Mục Ngày
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Text(
-                  'Ngày',
-                  style: TextStyle(fontSize: 16, color: Color(0xFF272727)),
-                ),
-              ),
-              Expanded(
-                flex: 5,
-                child: InkWell(
-                  onTap: () => _selectDate(context),
-                  // Handle tap on the entire container
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey), // Border color
-                      borderRadius: BorderRadius.circular(8.0), // Border radius
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Text(
-                              _selectedDate.isEmpty ? '' : _selectedDate,
-                              // Display selected date
-                              style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF272727)),
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.calendar_month_outlined,
-                            color: Colors.grey,
-                          ),
-                          onPressed: () => _selectDate(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              )
-            ],
+          _buildDatePicker(
+            label: "Ngày",
+            selectedDate:
+                sharedProposalVersions.value[index].dateVersionCreated ?? "",
+            onSelectDate: (date) {
+              sharedProposalVersions.value[index].dateVersionCreated = date;
+              sharedProposalVersions.notifyListeners();
+            },
           ),
           SizedBox(height: 16),
-
           // Mục Người ký
           Row(
             children: [
@@ -1004,7 +957,11 @@ class _VersionTabState extends State<VersionTab>
               Expanded(
                 flex: 5,
                 child: TextField(
-                  controller: _versionSignerController,
+                  controller: TextEditingController(text: sharedProposalVersions.value[index].signerVersion ?? ''),
+                  onChanged: (value) {
+                    sharedProposalVersions.value[index].signerVersion = value;
+                    sharedProposalVersions.notifyListeners();
+                  },
                   style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -1032,7 +989,11 @@ class _VersionTabState extends State<VersionTab>
               Expanded(
                 flex: 5,
                 child: TextField(
-                  controller: _versionFWDController,
+                  controller: TextEditingController(text: sharedProposalVersions.value[index].fwd ?? ''),
+                  onChanged: (value) {
+                    sharedProposalVersions.value[index].fwd = value;
+                    sharedProposalVersions.notifyListeners();
+                  },
                   style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -1045,9 +1006,97 @@ class _VersionTabState extends State<VersionTab>
               ),
             ],
           ),
-        ],
-      ),
+          SizedBox(height: 10),
+          if (sharedProposalVersions.value.length > 1 &&
+              index < sharedProposalVersions.value.length - 1)
+            Divider(color: Colors.grey, thickness: 1),
+        ]);
+  }
+
+  Widget _buildDatePicker(
+      {required String label,
+      required String selectedDate,
+      required ValueChanged<String> onSelectDate}) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 16, color: Color(0xFF272727)),
+          ),
+        ),
+        Expanded(
+          flex: 5,
+          child: InkWell(
+            onTap: () async {
+              final date = await _selectDate(context);
+              if (date != null) onSelectDate(date);
+            },
+            // Handle tap on the entire container
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.0),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey), // Border color
+                borderRadius: BorderRadius.circular(4.0), // Border radius
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text(
+                        selectedDate.isEmpty ? '' : selectedDate,
+                        // Display selected date
+                        style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF272727)),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.calendar_today,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () => _selectDate(context),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        )
+      ],
     );
+  }
+
+  Future<String?> _selectDate(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    return pickedDate != null
+        ? DateFormat('dd/MM/yyyy').format(pickedDate)
+        : null;
+  }
+
+  void _addVersion() {
+    sharedProposalVersions.value.add(Version());
+    sharedProposalVersions.notifyListeners();
+  }
+
+  void _removeVersion(int index) {
+    // Log for debugging the index being removed
+    print("remove version at index $index");
+
+    // Check if index is valid and remove it
+    if (index >= 0 && index < sharedProposalVersions.value.length) {
+      sharedProposalVersions.value.removeAt(index);
+      sharedProposalVersions.notifyListeners(); // Notify listeners
+    }
   }
 
   @override

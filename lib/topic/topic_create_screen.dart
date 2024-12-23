@@ -15,11 +15,11 @@ final ValueNotifier<DataCreate> sharedTopicInformation =
     ValueNotifier(DataCreate());
 final ValueNotifier<List<Student>> sharedProposalStudents = ValueNotifier([]);
 
-class CreateTopicScreen extends StatefulWidget {
-  const CreateTopicScreen({super.key});
+class TopicCreateScreen extends StatefulWidget {
+  const TopicCreateScreen({super.key});
 
   @override
-  _CreateTopicScreenState createState() => _CreateTopicScreenState();
+  _TopicCreateScreenState createState() => _TopicCreateScreenState();
 }
 
 class FileSelectionConfirmationPage extends StatelessWidget {
@@ -118,7 +118,7 @@ class FileSelectionConfirmationPage extends StatelessWidget {
   }
 }
 
-class _CreateTopicScreenState extends State<CreateTopicScreen>
+class _TopicCreateScreenState extends State<TopicCreateScreen>
     with BaseLoadingState {
   bool _isInformationComplete = false;
   bool _isMemberComplete = false;
@@ -333,7 +333,7 @@ class _InformationTabState extends State<InformationTab>
 
   void _checkCompletion() {
     final addTopicState =
-        context.findAncestorStateOfType<_CreateTopicScreenState>();
+        context.findAncestorStateOfType<_TopicCreateScreenState>();
     addTopicState?._checkCompletion();
   }
 
@@ -556,7 +556,7 @@ class _MemberTabState extends State<MemberTab>
 
   void _checkCompletion() {
     final addTopicState =
-        context.findAncestorStateOfType<_CreateTopicScreenState>();
+        context.findAncestorStateOfType<_TopicCreateScreenState>();
     addTopicState?._checkCompletion();
   }
 

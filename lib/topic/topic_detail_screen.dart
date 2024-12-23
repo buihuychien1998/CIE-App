@@ -3,24 +3,22 @@ import 'package:home/home/dashboard_screen.dart';
 import 'package:home/report/report_screen.dart';
 import 'package:home/staff/staff_screen.dart';
 import 'package:home/topic/topic_screen.dart';
-import 'package:home/topic/infor_topic.dart';
-import 'package:home/topic/list_member_topic.dart';
+import 'package:home/topic/topic_information_screen.dart';
+import 'package:home/topic/topic_member_screen.dart';
 import 'package:home/topic/file_topic.dart';
 
 import '../models/topic_response.dart';
 
 class TopicDetailScreen extends StatefulWidget {
-  final Topic topic;
+  Topic topic;
 
-  const TopicDetailScreen({Key? key, required this.topic}) : super(key: key);
+  TopicDetailScreen({super.key, required this.topic});
 
   @override
   _TopicDetailScreenState createState() => _TopicDetailScreenState();
 }
 
 class _TopicDetailScreenState extends State<TopicDetailScreen> {
-  int _selectedIndex = 2;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,7 +27,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
         title: Padding(
           padding: const EdgeInsets.only(top: 4.0, left: 20.0),
           child: Text(
-            'Đề tài số ${widget.topic}',
+            'Đề tài số ${widget.topic.topicCode}',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -55,13 +53,20 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
             children: [
               const SizedBox(height: 25),
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  final updatedTopic = await Navigator.push<Topic>(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => InformationTopic(),
+                      builder: (context) => TopicInformationScreen(topic: widget.topic),
                     ),
                   );
+
+                  // If the updated topic is not null, update the current model
+                  if (updatedTopic != null) {
+                    setState(() {
+                      widget.topic = updatedTopic;  // Update the original topic with the updated one
+                    });
+                  }
                 },
                 child: Container(
                   padding: EdgeInsets.symmetric(vertical: 12, horizontal: 13),
@@ -89,7 +94,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ListMemberTopic(),
+                      builder: (context) => TopicMemberScreen(topic: widget.topic,),
                     ),
                   );
                 },

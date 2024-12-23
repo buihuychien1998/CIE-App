@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:home/base/base_loading_state.dart';
 
 import '../base/api_url.dart';
+import '../models/proposal_create_response.dart' as proposalUpdate;
 import '../models/proposal_response.dart';
 import '../models/proposal_update_request.dart';
 import '../utils/toast_utils.dart';
 
 class ReportInformationScreen extends StatefulWidget {
-  final Proposal proposal;
+  late Proposal proposal;
 
-  const ReportInformationScreen({super.key, required this.proposal});
+  ReportInformationScreen({super.key, required this.proposal});
 
   @override
   _ReportInformationScreenState createState() =>
@@ -79,7 +80,7 @@ class _ReportInformationScreenState extends State<ReportInformationScreen>
             ),
             child: InkWell(
               onTap: () {
-                setState(() {});
+                updateProposal();
               },
               child: Container(
                 alignment: Alignment.center,
@@ -161,17 +162,17 @@ class _ReportInformationScreenState extends State<ReportInformationScreen>
                           ),
                           child: TextField(
                             controller: _codeController,
-                            enabled: _isEditing,
+                            enabled: false,
                             maxLines: 1,
                             decoration: const InputDecoration(
                               contentPadding:
                                   EdgeInsets.symmetric(horizontal: 8.0),
                               border: InputBorder.none,
                             ),
-                            style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF272727)),
+                            // style: const TextStyle(
+                            //     fontSize: 16,
+                            //     fontWeight: FontWeight.bold,
+                            //     color: Color(0xFF272727)),
                           ),
                         ),
                       ),
@@ -309,7 +310,7 @@ class _ReportInformationScreenState extends State<ReportInformationScreen>
     showLoading();
     // Lấy dữ liệu từ form
     try {
-      Proposal proposal = Proposal();
+      Proposal proposal = widget.proposal;
       proposal.nameProposal = _nameController.text;
       proposal.proposalCode = _codeController.text;
       proposal.dateCreated = _dateController.text;
@@ -318,17 +319,27 @@ class _ReportInformationScreenState extends State<ReportInformationScreen>
       // _nameController.text =  "v/v Kế hoạch tổ chức đào tạo học kỳ II năm học 2023 - 2024 cho lớp LKĐT và cấp bằng cử nhân CNTT giữa Học viện CNBCVT và ĐH La Trobe ( Úc) khóa 2022 - 2023";
       final body = ProposalUpdateRequest();
       body.dataUpdate = DataUpdate.fromJson(proposal.toJson());
+      body.proposalCode = widget.proposal.proposalCode;
       final data = await apiService.post(ApiUrl.post_update_proposal(),
           body: body.toJson());
 
-      // ProposalCreateResponse response = ProposalCreateResponse.fromJson(data);
-      // if (response.proposal?.id != null) {
-      //   ToastUtils.showSuccess("Bạn đã cập nhật tờ trình thành công!");
-      //   Navigator.pop(context, true);
-      // } else {
-      //   ToastUtils.showError(
-      //       "Cập nhật tờ trình không thành công. Vui lòng kiểm tra và thử lại!");
-      // }
+      proposalUpdate.ProposalCreateResponse response = proposalUpdate.ProposalCreateResponse.fromJson(data);
+      if (response.proposal?.id != null) {
+        ToastUtils.showSuccess("Bạn đã cập nhật tờ trình thành công!");
+        // Update the origin model
+        setState(() {
+          widget.proposal = Proposal.fromJson(response.proposal?.toJson());
+        });
+
+        // Navigate to the updated staff info screen
+        Navigator.pop(
+          context,
+          widget.proposal,
+        );
+      } else {
+        ToastUtils.showError(
+            "Cập nhật tờ trình không thành công. Vui lòng kiểm tra và thử lại!");
+      }
     } catch (e, stackTrace) {
       print(stackTrace);
     } finally {

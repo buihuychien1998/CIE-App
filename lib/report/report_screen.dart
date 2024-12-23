@@ -36,9 +36,9 @@ class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
     });
   }
 
-  void _navigateToDetailPage(BuildContext context, Proposal? proposal) {
+  void _navigateToDetailPage(BuildContext context, Proposal? proposal) async {
     if (proposal == null) return;
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ReportDetailScreen(
@@ -46,6 +46,7 @@ class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
         ),
       ),
     );
+    getAllProposal();
   }
 
   void _showDeleteConfirmationSheet(BuildContext context, int index) {
