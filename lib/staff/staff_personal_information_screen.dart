@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:home/base/base_loading_state.dart';
 import 'package:home/models/employee_response.dart';
 import 'package:home/models/staff_update_response.dart' as staffUpdate;
@@ -127,9 +128,9 @@ class _StaffPersonalInformationScreenState extends State<StaffPersonalInformatio
                   // Ngày sinh
                   _buildTextFieldRow('Ngày', _dateofbirthController),
                   // Số CCCD
-                  _buildTextFieldRow('Số CCCD', _CCCDnumberController),
+                  _buildNumberTextFieldRow('Số CCCD', _CCCDnumberController),
                   // Số BHXH
-                  _buildTextFieldRow('Số BHXH', _BHXHnumberController),
+                  _buildNumberTextFieldRow('Số BHXH', _BHXHnumberController),
                   // Nơi ở
                   _buildTextFieldRow('Nơi ở', _placeController),
                   Divider(color: Colors.grey, thickness: 2.0),
@@ -182,6 +183,52 @@ class _StaffPersonalInformationScreenState extends State<StaffPersonalInformatio
                   contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
                   border: InputBorder.none,
                 ),
+                style: TextStyle(fontSize: 14),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNumberTextFieldRow(String label, TextEditingController controller, {bool isEnabled = true}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+          Expanded(
+            flex: 5,
+            child: Container(
+              constraints: BoxConstraints(minHeight: 42),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(4),
+                color: Colors.white,
+              ),
+              child: TextField(
+                controller: controller,
+                enabled: _isEditing && isEnabled,
+                maxLines: 1,
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
+                  border: InputBorder.none,
+                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: <TextInputFormatter>[
+                  // for below version 2 use this
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+// for version 2 and greater youcan also use this
+                  FilteringTextInputFormatter.digitsOnly
+
+                ],
                 style: TextStyle(fontSize: 14),
               ),
             ),

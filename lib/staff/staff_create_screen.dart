@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:home/models/staff_create_request.dart';
 import 'package:home/models/staff_create_response.dart';
 import 'package:intl/intl.dart';
@@ -67,8 +68,8 @@ class _CreateStaffScreenState extends State<CreateStaffScreen>
             TextButton(
               onPressed: (_isInformationComplete && _isRecruitmentComplete)
                   ? () {
-                createStaff();
-              }
+                      createStaff();
+                    }
                   : null,
               child: Text(
                 'Lưu',
@@ -933,6 +934,13 @@ class _RecruitmentTabState extends State<RecruitmentTab>
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
                   ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: <TextInputFormatter>[
+                    // for below version 2 use this
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+// for version 2 and greater youcan also use this
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
                 ),
               ),
             ],
@@ -957,6 +965,13 @@ class _RecruitmentTabState extends State<RecruitmentTab>
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
                   ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: <TextInputFormatter>[
+                    // for below version 2 use this
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+// for version 2 and greater youcan also use this
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
                 ),
               ),
             ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:home/base/base_loading_state.dart';
 import 'package:home/extension/string_extension.dart';
 import 'package:home/models/employee_response.dart';
@@ -213,6 +214,13 @@ class _StaffRecruitmentScreenState extends State<StaffRecruitmentScreen>
                             border: InputBorder.none,
                             hintText: 'Nhập bậc lương',
                           ),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: <TextInputFormatter>[
+                            // for below version 2 use this
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+// for version 2 and greater youcan also use this
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
                           style: TextStyle(fontSize: 14),
                         ),
                       ),
@@ -250,6 +258,14 @@ class _StaffRecruitmentScreenState extends State<StaffRecruitmentScreen>
                             border: InputBorder.none,
                             hintText: 'Nhập hệ số',
                           ),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: <TextInputFormatter>[
+                            // for below version 2 use this
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+// for version 2 and greater youcan also use this
+                            FilteringTextInputFormatter.digitsOnly
+
+                          ],
                           style: TextStyle(fontSize: 14),
                         ),
                       ),
