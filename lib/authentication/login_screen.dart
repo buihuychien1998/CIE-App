@@ -47,6 +47,9 @@ class _LoginScreenState extends State<LoginScreen> with BaseLoadingState {
     final savedRemember = await isRememberPassword();
 
     if (savedRemember && savedEmail != null && savedPassword != null) {
+      print('_loadRememberedCredentials rememberPassword: $savedRemember');
+      print('_loadRememberedCredentials savedEmail: $savedEmail');
+      print('_loadRememberedCredentials savedPassword: $savedPassword');
       setState(() {
         _email = savedEmail;
         _password = savedPassword;
@@ -85,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> with BaseLoadingState {
           body: loginData,
         );
         await Future.delayed(const Duration(milliseconds: 500));
-        print('Fetched users: $data');
+        print('Fetched users rememberPassword: $rememberPassword');
 
         hideLoading(); // Hide the loading indicator
 
@@ -184,6 +187,9 @@ class _LoginScreenState extends State<LoginScreen> with BaseLoadingState {
                           _email = value;
                           _checkFormValidity();
                         },
+                        controller: TextEditingController(text: _email)
+                          ..selection = TextSelection.collapsed(
+                              offset: _email?.length ?? 0),
                         decoration: const InputDecoration(
                           hintText: 'Nhập email của bạn',
                           hintStyle: TextStyle(color: Colors.grey),
@@ -229,6 +235,9 @@ class _LoginScreenState extends State<LoginScreen> with BaseLoadingState {
                           _password = value;
                           _checkFormValidity();
                         },
+                        controller: TextEditingController(text: _password)
+                          ..selection = TextSelection.collapsed(
+                              offset: _password?.length ?? 0),
                         decoration: InputDecoration(
                           hintText: 'Nhập mật khẩu của bạn',
                           hintStyle: const TextStyle(color: Colors.grey),
@@ -278,7 +287,8 @@ class _LoginScreenState extends State<LoginScreen> with BaseLoadingState {
                                 offset: const Offset(-8, 0),
                                 child: Checkbox(
                                   value: rememberPassword,
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
                                   onChanged: (bool? value) async {
                                     await setRememberPassword(value);
                                     setState(() {

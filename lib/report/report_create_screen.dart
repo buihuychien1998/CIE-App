@@ -887,7 +887,9 @@ class _VersionTabState extends State<VersionTab>
                   sharedProposalVersions.value[index].nameVersion = value;
                   sharedProposalVersions.notifyListeners();
                 },
-                controller: TextEditingController(text: sharedProposalVersions.value[index].nameVersion ?? ''),
+                controller: TextEditingController(text: sharedProposalVersions.value[index].nameVersion ?? '')
+                  ..selection = TextSelection.collapsed(
+                      offset: sharedProposalVersions.value[index].nameVersion?.length ?? 0),
                 maxLines: null,
                 style: const TextStyle(fontSize: 16, color: Color(0xFF272727)),
                 decoration: InputDecoration(
@@ -957,7 +959,9 @@ class _VersionTabState extends State<VersionTab>
               Expanded(
                 flex: 5,
                 child: TextField(
-                  controller: TextEditingController(text: sharedProposalVersions.value[index].signerVersion ?? ''),
+                  controller: TextEditingController(text: sharedProposalVersions.value[index].signerVersion ?? '')
+                    ..selection = TextSelection.collapsed(
+                        offset: sharedProposalVersions.value[index].signerVersion?.length ?? 0),
                   onChanged: (value) {
                     sharedProposalVersions.value[index].signerVersion = value;
                     sharedProposalVersions.notifyListeners();
@@ -989,7 +993,9 @@ class _VersionTabState extends State<VersionTab>
               Expanded(
                 flex: 5,
                 child: TextField(
-                  controller: TextEditingController(text: sharedProposalVersions.value[index].fwd ?? ''),
+                  controller: TextEditingController(text: sharedProposalVersions.value[index].fwd ?? '')
+                    ..selection = TextSelection.collapsed(
+                        offset: sharedProposalVersions.value[index].fwd?.length ?? 0),
                   onChanged: (value) {
                     sharedProposalVersions.value[index].fwd = value;
                     sharedProposalVersions.notifyListeners();

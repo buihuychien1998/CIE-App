@@ -9,8 +9,10 @@ import 'package:home/topic/topic_create_screen.dart';
 import 'package:home/staff/staff_create_screen.dart';
 
 import '../base/api_url.dart';
+import '../constants/app_constants.dart';
 import '../constants/size_constants.dart';
 import '../models/employee_response.dart';
+import '../models/user_profile_response.dart';
 import '../report/report_create_screen.dart';
 import 'dashboard_screen.dart';
 
@@ -28,6 +30,7 @@ class _HomePageState extends State<HomePage> with BaseLoadingState {
   void initState() {
     super.initState();
     _reportsFuture = DatabaseService().getReports();
+    getUserProfile();
   }
 
   @override
@@ -197,7 +200,7 @@ class _HomePageState extends State<HomePage> with BaseLoadingState {
         Expanded(
           child: GestureDetector(
             onTap: () {
-             getAllEmployee();
+              getAllEmployee();
             },
             child: _buildCategoryCard(
               title: 'Tờ trình',
@@ -212,7 +215,8 @@ class _HomePageState extends State<HomePage> with BaseLoadingState {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const TopicCreateScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const TopicCreateScreen()),
               );
             },
             child: _buildCategoryCard(
@@ -228,7 +232,8 @@ class _HomePageState extends State<HomePage> with BaseLoadingState {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const CreateStaffScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const CreateStaffScreen()),
               );
             },
             child: _buildCategoryCard(
@@ -343,8 +348,8 @@ class _HomePageState extends State<HomePage> with BaseLoadingState {
             BarChartData(
               alignment: BarChartAlignment.spaceAround,
               maxY: reports
-                  .map((report) => report.quantity.toDouble())
-                  .reduce((a, b) => a > b ? a : b) +
+                      .map((report) => report.quantity.toDouble())
+                      .reduce((a, b) => a > b ? a : b) +
                   10,
               barGroups: reports.map((report) {
                 return BarChartGroupData(
@@ -396,7 +401,7 @@ class _HomePageState extends State<HomePage> with BaseLoadingState {
             ],
             rows: List.generate(
               reports.length,
-                  (index) {
+              (index) {
                 return DataRow(cells: [
                   DataCell(Text('${index + 1}')),
                   DataCell(Text('Tờ trình ${index + 1}')),
@@ -427,10 +432,29 @@ class _HomePageState extends State<HomePage> with BaseLoadingState {
       var result = await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ReportCreateScreen(employee: response.employee ?? [],), // Điều hướng đến trang AddReport
+          builder: (context) => ReportCreateScreen(
+            employee: response.employee ?? [],
+          ), // Điều hướng đến trang AddReport
         ),
       );
+    } catch (e, stackTrace) {
+      print(stackTrace);
+    } finally {
+      progressStream.add(false);
+    }
+  }
 
+  Future<void> getUserProfile() async {
+    progressStream.add(true);
+
+    // Lấy dữ liệu từ form
+    try {
+      final data = await apiService.get(
+        ApiUrl.get_profile(),
+      );
+
+      UserProfileResponse response = UserProfileResponse.fromJson(data);
+      AppConstant.profile = response.profile;
     } catch (e, stackTrace) {
       print(stackTrace);
     } finally {

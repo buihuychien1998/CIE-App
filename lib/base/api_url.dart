@@ -5,6 +5,9 @@ class ApiUrl{
   //Authentication
   static post_login() => 'api/login';
 
+  //User
+  static get_profile() => 'api/profile';
+
   //Proposal
   static get_all_proposal() => 'api/v1/proposal/all';
   static post_filter_proposal() => 'api/v1/proposal/filter';
