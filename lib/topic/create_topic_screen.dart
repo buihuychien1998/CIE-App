@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:home/models/topic_create_response.dart';
 import 'package:intl/intl.dart';
 import 'package:home/after_upload.dart';
 import 'package:home/topic/topic_screen.dart';
+
+import '../base/api_url.dart';
+import '../base/base_loading_state.dart';
+import '../extension/string_extension.dart';
+import '../models/topic_create_request.dart';
+import '../utils/toast_utils.dart';
+
+final ValueNotifier<DataCreate> sharedTopicInformation =
+    ValueNotifier(DataCreate());
+final ValueNotifier<List<Student>> sharedProposalStudents = ValueNotifier([]);
 
 class CreateTopicScreen extends StatefulWidget {
   const CreateTopicScreen({super.key});
@@ -106,33 +118,38 @@ class FileSelectionConfirmationPage extends StatelessWidget {
   }
 }
 
-class _CreateTopicScreenState extends State<CreateTopicScreen> {
+class _CreateTopicScreenState extends State<CreateTopicScreen>
+    with BaseLoadingState {
   bool _isInformationComplete = false;
-  bool _isVersionComplete = false;
-  bool _isDocumentsComplete = false;
+  bool _isMemberComplete = false;
 
   void _checkCompletion() {
     setState(() {
       _isInformationComplete = _isInformationTabComplete();
-      _isVersionComplete = _isVersionTabComplete();
-      _isDocumentsComplete = _isDocumentsTabComplete();
+      _isMemberComplete = _isMemberTabComplete();
     });
   }
 
   bool _isInformationTabComplete() {
-    // Kiểm tra các trường thông tin trong tab "Thông tin"
-    return true; // Thay đổi điều kiện này tùy thuộc vào cách kiểm tra của bạn
+    print(sharedTopicInformation.value.toJson());
+    return !TextUtils.isEmpty(sharedTopicInformation.value.nameTopic) &&
+        !TextUtils.isEmpty(sharedTopicInformation.value.topicCode) &&
+        !TextUtils.isEmpty(sharedTopicInformation.value.type) &&
+        !TextUtils.isEmpty(sharedTopicInformation.value.unit) &&
+        !TextUtils.isEmpty(sharedTopicInformation.value.levelManager) &&
+        !TextUtils.isEmpty(sharedTopicInformation.value.burget) &&
+        !TextUtils.isEmpty(sharedTopicInformation.value.year);
   }
 
-  bool _isVersionTabComplete() {
-    // Kiểm tra các trường thông tin trong tab "Phiên bản"
-    return true; // Thay đổi điều kiện này tùy thuộc vào cách kiểm tra của bạn
-  }
-
-  bool _isDocumentsTabComplete() {
-    // Kiểm tra các trường thông tin trong tab "Tài liệu"
-    // Ví dụ: Kiểm tra xem các file đã được chọn hay chưa
-    return true; // Thay đổi điều kiện này tùy thuộc vào cách kiểm tra của bạn
+  bool _isMemberTabComplete() {
+    // Check if all students have non-empty fields
+    final isComplete = sharedProposalStudents.value.every((student) {
+      print(student.toJson());
+      return student.fullname?.trim().isNotEmpty == true &&
+          student.studentCode?.trim().isNotEmpty == true &&
+          student.positionName?.trim().isNotEmpty == true;
+    });
+    return isComplete;
   }
 
   @override
@@ -154,19 +171,15 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: (_isInformationComplete &&
-                      _isVersionComplete &&
-                      _isDocumentsComplete)
+              onPressed: (_isInformationComplete && _isMemberComplete)
                   ? () {
-                      // Thực hiện hành động lưu
+                      createTopic();
                     }
                   : null,
               child: Text(
                 'Lưu',
                 style: TextStyle(
-                  color: (_isInformationComplete &&
-                          _isVersionComplete &&
-                          _isDocumentsComplete)
+                  color: (_isInformationComplete && _isMemberComplete)
                       ? Colors.blue
                       : Colors.grey,
                   fontSize: 18,
@@ -202,12 +215,51 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
         body: TabBarView(
           children: [
             InformationTab(),
-            VersionTab(),
+            MemberTab(),
             DocumentsTab(onFileSelected: _checkCompletion),
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    clearData();
+    super.dispose();
+  }
+
+  void clearData() {
+    sharedTopicInformation.value = DataCreate(); // Clear data
+    sharedTopicInformation.notifyListeners(); // Notify listeners to update UI
+    sharedProposalStudents.value = [];
+    sharedProposalStudents.notifyListeners(); // Notify listeners to update UI
+  }
+
+  Future<void> createTopic() async {
+    showLoading();
+    // Lấy dữ liệu từ form
+    try {
+      final body = TopicCreateRequest();
+      body.dataCreate = sharedTopicInformation.value;
+      body.student ??= [];
+      body.student?.addAll(sharedProposalStudents.value);
+      final data = await apiService.post(ApiUrl.post_create_topic(),
+          body: body.toJson());
+
+      TopicCreateResponse response = TopicCreateResponse.fromJson(data);
+      if (response.topic != null) {
+        ToastUtils.showSuccess("Bạn đã thêm đề tài thành công!");
+        Navigator.pop(context, true);
+      } else {
+        ToastUtils.showError(
+            "Thêm đề tài không thành công. Vui lòng kiểm tra và thử lại!");
+      }
+    } catch (e, stackTrace) {
+      print(stackTrace);
+    } finally {
+      hideLoading();
+    }
   }
 }
 
@@ -219,57 +271,69 @@ class InformationTab extends StatefulWidget {
   _InformationTabState createState() => _InformationTabState();
 }
 
-class _InformationTabState extends State<InformationTab> {
-  final TextEditingController _dateController = TextEditingController();
-  final TextEditingController _infoController = TextEditingController();
-  String? _status;
+class _InformationTabState extends State<InformationTab>
+    with AutomaticKeepAliveClientMixin {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _codeController = TextEditingController();
+  final TextEditingController _unitController = TextEditingController();
+
+  // final TextEditingController _managementLevelController = TextEditingController();
+  final TextEditingController _budgetController = TextEditingController();
+  final TextEditingController _yearController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     // Thêm listener cho controllers
-    _dateController.addListener(_checkCompletion);
-    _infoController.addListener(_checkCompletion);
+    sharedTopicInformation.value.type = "Đề tài";
+    sharedTopicInformation.value.levelManager = "Cấp học viện";
+    sharedTopicInformation.notifyListeners(); // Notify listeners if needed
+    _nameController.addListener(() {
+      sharedTopicInformation.value.nameTopic = _nameController.text;
+      sharedTopicInformation.notifyListeners(); // Notify listeners if needed
+      _checkCompletion();
+    });
+    _codeController.addListener(() {
+      sharedTopicInformation.value.topicCode = _codeController.text;
+      sharedTopicInformation.notifyListeners(); // Notify listeners if needed
+      _checkCompletion();
+    });
+    _unitController.addListener(() {
+      sharedTopicInformation.value.unit = _unitController.text;
+      sharedTopicInformation.notifyListeners(); // Notify listeners if needed
+      _checkCompletion();
+    });
+    // _managementLevelController.addListener(() {
+    //   sharedTopicInformation.value.levelManager = _managementLevelController.text;
+    //   sharedTopicInformation.notifyListeners(); // Notify listeners if needed
+    //   _checkCompletion();
+    // });
+    _budgetController.addListener(() {
+      sharedTopicInformation.value.burget = _budgetController.text;
+      sharedTopicInformation.notifyListeners(); // Notify listeners if needed
+      _checkCompletion();
+    });
+    _yearController.addListener(() {
+      sharedTopicInformation.value.year = _yearController.text;
+      sharedTopicInformation.notifyListeners(); // Notify listeners if needed
+      _checkCompletion();
+    });
   }
 
   @override
   void dispose() {
-    _dateController.dispose();
-    _infoController.dispose();
+    _nameController.dispose();
+    _codeController.dispose();
+    _unitController.dispose();
+    // _managementLevelController.dispose();
+    _budgetController.dispose();
+    _yearController.dispose();
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime currentDate = DateTime.now();
-    DateTime? selectedDate = await showDatePicker(
-      context: context,
-      initialDate: currentDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-      builder: (BuildContext context, Widget? child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.blue,
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (selectedDate != null && selectedDate != currentDate) {
-      setState(() {
-        _dateController.text = "${selectedDate.toLocal()}".split(' ')[0];
-        _checkCompletion();
-      });
-    }
-  }
-
   void _checkCompletion() {
-    final addTopicState = context.findAncestorStateOfType<_CreateTopicScreenState>();
+    final addTopicState =
+        context.findAncestorStateOfType<_CreateTopicScreenState>();
     addTopicState?._checkCompletion();
   }
 
@@ -290,6 +354,7 @@ class _InformationTabState extends State<InformationTab> {
               ),
               SizedBox(height: 8),
               TextField(
+                controller: _nameController,
                 maxLines: null,
                 decoration: InputDecoration(
                   hintText: 'Nhập tên đề tài',
@@ -315,6 +380,7 @@ class _InformationTabState extends State<InformationTab> {
               Expanded(
                 flex: 5,
                 child: TextField(
+                  controller: _codeController,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -338,6 +404,8 @@ class _InformationTabState extends State<InformationTab> {
               Expanded(
                 flex: 5,
                 child: TextField(
+                  controller: TextEditingController(text: "Đề tài"),
+                  enabled: false,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -361,6 +429,7 @@ class _InformationTabState extends State<InformationTab> {
               Expanded(
                 flex: 5,
                 child: TextField(
+                  controller: _unitController,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -384,6 +453,8 @@ class _InformationTabState extends State<InformationTab> {
               Expanded(
                 flex: 5,
                 child: TextField(
+                  controller: TextEditingController(text: "Cấp học viện"),
+                  enabled: false,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -407,6 +478,7 @@ class _InformationTabState extends State<InformationTab> {
               Expanded(
                 flex: 5,
                 child: TextField(
+                  controller: _budgetController,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -430,10 +502,17 @@ class _InformationTabState extends State<InformationTab> {
               Expanded(
                 flex: 5,
                 child: TextField(
+                  controller: _yearController,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
                   ),
+                  keyboardType: TextInputType.number,
+                  // Specifies the keyboard for numbers
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    // Allows only numeric input
+                  ],
                 ),
               ),
             ],
@@ -442,31 +521,30 @@ class _InformationTabState extends State<InformationTab> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 // Tab Thành viên
-class VersionTab extends StatefulWidget {
-  const VersionTab({Key? key}) : super(key: key);
+class MemberTab extends StatefulWidget {
+  const MemberTab({super.key});
 
   @override
-  _VersionTabState createState() => _VersionTabState();
+  _MemberTabState createState() => _MemberTabState();
 }
 
-class _VersionTabState extends State<VersionTab> {
+class _MemberTabState extends State<MemberTab>
+    with AutomaticKeepAliveClientMixin {
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _infoController = TextEditingController();
-  List<Widget> _members = []; // Danh sách thành viên
-  int _memberCount = 0; // Biến đếm số lượng thành viên
 
   @override
   void initState() {
     super.initState();
-    // Thêm listener cho controllers
     _dateController.addListener(_checkCompletion);
     _infoController.addListener(_checkCompletion);
-
-    // Thêm phần thành viên đầu tiên khi vào trang
-    _addMember(); // Đưa vào đây để tạo bảng đầu tiên ngay khi khởi tạo
+    _addMember(); // Add initial member
   }
 
   @override
@@ -476,48 +554,28 @@ class _VersionTabState extends State<VersionTab> {
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime currentDate = DateTime.now();
-    DateTime? selectedDate = await showDatePicker(
-      context: context,
-      initialDate: currentDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-      builder: (BuildContext context, Widget? child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.blue,
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (selectedDate != null && selectedDate != currentDate) {
-      setState(() {
-        _dateController.text = "${selectedDate.toLocal()}"
-            .split(' ')[0]; // Cập nhật văn bản với ngày đã chọn
-        _checkCompletion(); // Kiểm tra trạng thái khi ngày thay đổi
-      });
-    }
-  }
-
   void _checkCompletion() {
-    final addTopicState = context.findAncestorStateOfType<_CreateTopicScreenState>();
+    final addTopicState =
+        context.findAncestorStateOfType<_CreateTopicScreenState>();
     addTopicState?._checkCompletion();
   }
 
   void _addMember() {
-    setState(() {
-      _members.add(
-        _buildMember(_memberCount),
-      );
-      _memberCount++;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      sharedProposalStudents.value.add(Student()); // Add a new Student object
+      sharedProposalStudents.notifyListeners(); // Notify listeners after the frame completes
+      _checkCompletion();
     });
+  }
+
+  void _removeMember(int index) {
+    if (sharedProposalStudents.value.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        sharedProposalStudents.value.removeAt(index); // Remove the student
+        sharedProposalStudents.notifyListeners(); // Notify listeners after the frame completes
+        _checkCompletion();
+      });
+    }
   }
 
   Widget _buildMember(int index) {
@@ -533,164 +591,135 @@ class _VersionTabState extends State<VersionTab> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             IconButton(
-              icon: Icon(Icons.do_not_disturb_on,
-                  color: _members.length > 1 ? Colors.red : Colors.grey),
-              onPressed:
-                  _members.length > 1 ? () => _removeMember(index) : null,
+              icon: Icon(
+                Icons.do_not_disturb_on,
+                color: sharedProposalStudents.value.length > 1
+                    ? Colors.red
+                    : Colors.grey,
+              ),
+              onPressed: sharedProposalStudents.value.length > 1
+                  ? () => _removeMember(index)
+                  : null,
             ),
           ],
         ),
         SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: Text(
-                'Họ tên',
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-            Expanded(
-              flex: 5,
-              child: TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
-                ),
-              ),
-            ),
-          ],
+        _buildTextField(
+          label: 'Họ tên',
+          initialValue: sharedProposalStudents.value[index].fullname,
+          onChanged: (value) {
+            sharedProposalStudents.value[index].fullname = value;
+            sharedProposalStudents
+                .notifyListeners(); // Notify listeners about the update
+            _checkCompletion();
+          },
         ),
         SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: Text(
-                'Đinh danh',
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-            Expanded(
-              flex: 5,
-              child: TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
-                ),
-              ),
-            ),
-          ],
+        _buildTextField(
+          label: 'Định danh',
+          initialValue: sharedProposalStudents.value[index].studentCode,
+          onChanged: (value) {
+            sharedProposalStudents.value[index].studentCode = value;
+            sharedProposalStudents
+                .notifyListeners(); // Notify listeners about the update
+            _checkCompletion();
+          },
         ),
         SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: Text(
-                'Đơn vị',
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-            Expanded(
-              flex: 5,
-              child: TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: Text(
-                'Vai trò',
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-            Expanded(
-              flex: 5,
-              child: TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
-                ),
-              ),
-            ),
-          ],
+        _buildTextField(
+          label: 'Vai trò',
+          initialValue: sharedProposalStudents.value[index].positionName,
+          onChanged: (value) {
+            sharedProposalStudents.value[index].positionName = value;
+            sharedProposalStudents
+                .notifyListeners(); // Notify listeners about the update
+            _checkCompletion();
+          },
         ),
         SizedBox(height: 10),
-        // Đường line phân chia giữa các bảng
-        if (_members.length > 1 && index < _members.length - 1)
+        if (sharedProposalStudents.value.length > 1 &&
+            index < sharedProposalStudents.value.length - 1)
           Divider(color: Colors.grey, thickness: 1),
       ],
     );
   }
 
-  void _removeMember(int index) {
-    if (_members.isNotEmpty) {
-      setState(() {
-        _members.removeAt(index);
-        _memberCount--; // Giảm số lượng thành viên
-        // Cập nhật lại số thứ tự các thành viên còn lại
-        _updateMemberLabels();
-      });
-    }
-  }
-
-  void _updateMemberLabels() {
-    setState(() {
-      _members = List.generate(_memberCount, (index) => _buildMember(index));
-    });
+  Widget _buildTextField({
+    required String label,
+    required String? initialValue,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 16),
+          ),
+        ),
+        Expanded(
+          flex: 5,
+          child: TextField(
+            controller: TextEditingController(text: initialValue)
+              ..selection =
+                  TextSelection.collapsed(offset: initialValue?.length ?? 0),
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
+            ),
+            onChanged: onChanged,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Hiển thị danh sách thành viên
-          ..._members,
-
-          // Đường line màu xám ở dưới cùng
-          if (_members.isNotEmpty) SizedBox(height: 10),
-          if (_members.isNotEmpty) Divider(color: Colors.grey, thickness: 1),
-
-          // Icon add và chữ Thêm
-          Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+    return ValueListenableBuilder<List<Student>>(
+        valueListenable: sharedProposalStudents,
+        builder: (context, students, child) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.add,
-                    color: Colors.blue,
-                    size: 20,
-                  ),
-                  onPressed: _addMember,
-                ),
-                SizedBox(width: 0.1),
-                TextButton(
-                  onPressed: _addMember,
-                  child: Text(
-                    'Thêm',
-                    style: TextStyle(color: Colors.blue, fontSize: 16),
+                for (int i = 0; i < students.length; i++) _buildMember(i),
+                if (students.isNotEmpty) SizedBox(height: 10),
+                if (students.isNotEmpty)
+                  Divider(color: Colors.grey, thickness: 1),
+                Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.add,
+                          color: Colors.blue,
+                          size: 20,
+                        ),
+                        onPressed: _addMember,
+                      ),
+                      SizedBox(width: 0.1),
+                      TextButton(
+                        onPressed: _addMember,
+                        child: Text(
+                          'Thêm',
+                          style: TextStyle(color: Colors.blue, fontSize: 16),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
+          );
+        });
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 // Tab Hồ sơ

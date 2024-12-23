@@ -22,7 +22,7 @@ final ValueNotifier<Version> sharedProposalVersion = ValueNotifier(Version());
 class ReportCreateScreen extends StatefulWidget {
   final List<Employee> employee;
 
-  ReportCreateScreen({super.key, required this.employee});
+  const ReportCreateScreen({super.key, required this.employee});
 
   @override
   _ReportCreateScreenState createState() => _ReportCreateScreenState();
@@ -128,8 +128,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen>
 
   void clearData() {
     sharedProposalInformation.value = DataCreate(); // Clear data
-    sharedProposalInformation
-        .notifyListeners(); // Notify listeners to update UI
+    sharedProposalInformation.notifyListeners(); // Notify listeners to update UI
   }
 
   Future<void> createProposal() async {
@@ -467,8 +466,7 @@ class _InformationTabState extends State<InformationTab>
     with AutomaticKeepAliveClientMixin {
   final TextEditingController _proposalNameController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
-  String _selectedDate =
-      ''; // Use String variable instead of TextEditingController
+  String _selectedDate = ''; // Use String variable instead of TextEditingController
   String? _status;
   Employee? _selectedEmployee;
 

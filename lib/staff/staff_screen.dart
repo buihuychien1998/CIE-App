@@ -6,7 +6,7 @@ import 'package:home/report/report_screen.dart';
 import 'package:home/topic/topic_screen.dart';
 import 'package:home/staff/staff_detail.dart';
 import 'package:home/staff/staff_filter.dart';
-import 'package:home/staff/add_staff.dart';
+import 'package:home/staff/staff_create_screen.dart';
 
 import '../base/api_url.dart';
 import '../base/base_loading_state.dart';
@@ -57,13 +57,13 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
         return Container(
-          height: MediaQuery.of(context).size.height / 3,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           padding: EdgeInsets.all(20),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Align(
@@ -84,7 +84,7 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Xóa tờ trình này?',
+                'Xóa nhân sự này?',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -93,7 +93,7 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
               ),
               SizedBox(height: 12),
               const Text(
-                'Nếu xóa tờ trình này, bạn sẽ không thể khôi phục lại nữa. Bạn có chắc chắn muốn tiếp tục xóa không?',
+                'Nếu xóa nhân sự sự này, bạn sẽ không thể khôi phục lại nữa. Bạn có chắc chắn muốn tiếp tục xóa không?',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Color(0xFF626262), fontSize: 12),
               ),
@@ -432,13 +432,16 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
         floatingActionButton: Container(
           margin: const EdgeInsets.only(bottom: 16.0),
           child: FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async{
+              var result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AddStaff(), //
+                  builder: (context) => const CreateStaffScreen(),
                 ),
               );
+              if (result) {
+                getAllEmployee();
+              }
             },
             child: const Icon(
               Icons.add_outlined,
@@ -475,4 +478,28 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
       progressStream.add(false);
     }
   }
+  Future<void> deleteStaff() async {
+    showLoading();
+    // Lấy dữ liệu từ form
+    try {
+      final body = {
+        "employ_code": ""
+      };
+      final data = await apiService.post(ApiUrl.post_delete_employee(), body: body);
+
+      // StaffCreateResponse response = StaffCreateResponse.fromJson(data);
+      // if (response.employee?.id != null) {
+      //   ToastUtils.showSuccess("Bạn đã thêm nhân sự thành công!");
+      //   Navigator.pop(context, true);
+      // } else {
+      //   ToastUtils.showError(
+      //       "Thêm nhân sự không thành công. Vui lòng kiểm tra và thử lại!");
+      // }
+    } catch (e, stackTrace) {
+      print(stackTrace);
+    } finally {
+      hideLoading();
+    }
+  }
+
 }

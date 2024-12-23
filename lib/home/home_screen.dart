@@ -6,7 +6,7 @@ import 'package:home/models/reports.dart';
 import 'package:home/home/home_filter.dart';
 import 'package:home/home/search_home.dart';
 import 'package:home/topic/create_topic_screen.dart';
-import 'package:home/staff/add_staff.dart';
+import 'package:home/staff/staff_create_screen.dart';
 
 import '../base/api_url.dart';
 import '../constants/size_constants.dart';
@@ -228,7 +228,7 @@ class _HomePageState extends State<HomePage> with BaseLoadingState {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AddStaff()),
+                MaterialPageRoute(builder: (context) => const CreateStaffScreen()),
               );
             },
             child: _buildCategoryCard(

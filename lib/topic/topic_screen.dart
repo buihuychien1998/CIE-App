@@ -414,14 +414,16 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
         floatingActionButton: Container(
           margin: const EdgeInsets.only(bottom: 16.0),
           child: FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async{
+              var result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      CreateTopicScreen(), // Điều hướng đến trang AddTopic
+                  builder: (context) => CreateTopicScreen(),
                 ),
               );
+              if (result) {
+                getAllTopic();
+              }
             },
             child: const Icon(
               Icons.add_outlined,
