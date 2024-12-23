@@ -5,6 +5,7 @@ import 'package:home/home/search_home.dart';
 import 'package:home/report/report_detail_screen.dart';
 import 'package:home/report/report_filter_screen.dart';
 import 'package:home/report/report_create_screen.dart';
+import 'package:home/utils/toast_utils.dart';
 
 import '../base/api_url.dart';
 import '../constants/size_constants.dart';
@@ -497,6 +498,10 @@ class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
       );
 
       EmployeeResponse response = EmployeeResponse.fromJson(data);
+      if (response.employee?.isEmpty ?? true) {
+        ToastUtils.showInfo('Để tiếp tục, vui lòng thêm nhân sự vào hệ thống.');
+        return;
+      }
       var result = await Navigator.push(
         context,
         MaterialPageRoute(

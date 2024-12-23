@@ -14,6 +14,7 @@ import '../constants/size_constants.dart';
 import '../models/employee_response.dart';
 import '../models/user_profile_response.dart';
 import '../report/report_create_screen.dart';
+import '../utils/toast_utils.dart';
 import 'dashboard_screen.dart';
 
 class HomePage extends StatefulWidget {
@@ -429,6 +430,10 @@ class _HomePageState extends State<HomePage> with BaseLoadingState {
       );
 
       EmployeeResponse response = EmployeeResponse.fromJson(data);
+      if (response.employee?.isEmpty ?? true) {
+        ToastUtils.showInfo('Để tiếp tục, vui lòng thêm nhân sự vào hệ thống.');
+        return;
+      }
       var result = await Navigator.push(
         context,
         MaterialPageRoute(
