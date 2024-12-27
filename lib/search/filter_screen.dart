@@ -317,9 +317,9 @@ class FilterScreenState extends State<FilterScreen> with BaseLoadingState {
       default:
         break;
     }
+    Navigator.pop(context);
 
     widget.onApplyFilter(filters);
-    Navigator.pop(context);
   }
 
   Future<void> _fetchAllData() async {

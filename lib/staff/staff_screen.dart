@@ -230,7 +230,13 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
                             marginW10,
                             OutlinedButton(
                               onPressed: () {
-                                _navigateToFilterPage(context);
+                                // _navigateToFilterPage(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SearchScreen(type: SearchType.staff),
+                                  ),
+                                );
                               },
                               style: OutlinedButton.styleFrom(
                                 backgroundColor: Colors.white,

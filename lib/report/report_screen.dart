@@ -237,7 +237,13 @@ class ReportScreenState extends State<ReportScreen> with BaseLoadingState {
                             marginW10,
                             OutlinedButton(
                               onPressed: () {
-                                _navigateToFilterPage(context);
+                                // _navigateToFilterPage(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SearchScreen(type: SearchType.report),
+                                  ),
+                                );
                               },
                               style: OutlinedButton.styleFrom(
                                 backgroundColor: Colors.white,

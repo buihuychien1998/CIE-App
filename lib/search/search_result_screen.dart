@@ -19,9 +19,10 @@ import '../utils/toast_utils.dart';
 class SearchResultScreen extends StatefulWidget {
   final SearchType type;
   final String query;
+  final Map<String, dynamic> filters;
 
   const SearchResultScreen(
-      {super.key, required this.type, required this.query});
+      {super.key, required this.type, required this.query, required this.filters});
 
   @override
   SearchResultScreenState createState() => SearchResultScreenState();
@@ -47,7 +48,7 @@ class SearchResultScreenState extends State<SearchResultScreen>
 
   void _performSearch() {
     setState(() {
-      _applyFilters({});
+      _applyFilters(widget.filters);
     });
   }
 

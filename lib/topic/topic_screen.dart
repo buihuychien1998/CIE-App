@@ -227,7 +227,13 @@ class TopicScreenState extends State<TopicScreen> with BaseLoadingState {
                             marginW10,
                             OutlinedButton(
                               onPressed: () {
-                                _navigateToFilterPage(context);
+                                // _navigateToFilterPage(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SearchScreen(type: SearchType.topic),
+                                  ),
+                                );
                               },
                               style: OutlinedButton.styleFrom(
                                 backgroundColor: Colors.white,

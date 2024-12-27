@@ -72,6 +72,7 @@ class SearchScreenState extends State<SearchScreen> with BaseLoadingState{
           builder: (context) => SearchResultScreen(
             query: _searchController.text.trim(),
             type: widget.type,
+            filters: {},
           ),
         ),
       );
@@ -144,12 +145,29 @@ class SearchScreenState extends State<SearchScreen> with BaseLoadingState{
                       height: 50,
                       child: OutlinedButton(
                         onPressed: () {
-                          _performSearch();
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => FilterScreen(onApplyFilter: (filters){
-
+                                setState(() {
+                                  _searchResults.clear();
+                                  final query = _searchController.text.trim().toLowerCase();
+                                  if(!TextUtils.isEmpty(query)){
+                                    _searchHistory.remove(_searchController.text); // Avoid duplicates
+                                    _searchHistory.insert(0, _searchController.text);
+                                    _saveSearchHistory();
+                                  }
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SearchResultScreen(
+                                        query: _searchController.text.trim(),
+                                        type: widget.type,
+                                        filters: filters,
+                                      ),
+                                    ),
+                                  );
+                                });
                               },
                                 type: widget.type,),
                             ),

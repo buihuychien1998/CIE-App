@@ -42,7 +42,7 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(),
-          _buildSearchBar(),
+          // _buildSearchBar(),
           marginH20,
           _buildCategoryRows(),
           marginH24,
