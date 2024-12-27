@@ -95,10 +95,10 @@ class ApiService {
       log('Response Body: ${response.body}'); // Log response body
 
       return _handleResponse(response);
-    } catch (e) {
+    } catch (e, stacktrace) {
       log('Error: $e'); // Log error
       ToastUtils.showError('Error: ${e.toString()}'); // Show error toast
-      throw Exception('API request failed: $e');
+      throw Exception('API request failed: $stacktrace');
     }
   }
 

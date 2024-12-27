@@ -311,6 +311,7 @@ class _ReportInformationScreenState extends State<ReportInformationScreen>
     // Lấy dữ liệu từ form
     try {
       Proposal proposal = widget.proposal;
+      print("Update proposal: ${proposal.toJson()}");
       proposal.nameProposal = _nameController.text;
       proposal.proposalCode = _codeController.text;
       proposal.dateCreated = _dateController.text;
@@ -324,7 +325,7 @@ class _ReportInformationScreenState extends State<ReportInformationScreen>
           body: body.toJson());
 
       proposalUpdate.ProposalCreateResponse response = proposalUpdate.ProposalCreateResponse.fromJson(data);
-      if (response.proposal?.id != null) {
+      if (response.error == null) {
         ToastUtils.showSuccess("Bạn đã cập nhật tờ trình thành công!");
         // Update the origin model
         setState(() {

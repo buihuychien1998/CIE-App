@@ -12,17 +12,19 @@ mixin BaseLoadingState<T extends StatefulWidget> on State<T> {
   final apiService = ApiService(baseUrl: ApiUrl.baseUrl);
 
   void showLoading() {
-    print("showLoading");
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
   }
 
   void hideLoading() {
-    print("hideLoading");
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Widget buildWithLoading({required Widget child}) {

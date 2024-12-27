@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:home/base/base_loading_state.dart';
+import 'package:home/extension/string_extension.dart';
 import 'package:home/home/dashboard_screen.dart';
-import 'package:home/home/search_home.dart';
+import 'package:home/search/search_screen.dart';
 import 'package:home/report/report_detail_screen.dart';
-import 'package:home/report/report_filter_screen.dart';
+import 'package:home/search/filter_screen.dart';
 import 'package:home/report/report_create_screen.dart';
 import 'package:home/utils/toast_utils.dart';
 
 import '../base/api_url.dart';
+import '../constants/app_constants.dart';
 import '../constants/size_constants.dart';
 import '../models/employee_response.dart';
 import '../models/proposal_response.dart';
@@ -16,10 +18,10 @@ class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
 
   @override
-  _ReportScreenState createState() => _ReportScreenState();
+  ReportScreenState createState() => ReportScreenState();
 }
 
-class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
+class ReportScreenState extends State<ReportScreen> with BaseLoadingState {
   List<Proposal>? _rows;
   List<Proposal>? _filteredRows;
 
@@ -37,7 +39,7 @@ class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
     });
   }
 
-  void _navigateToDetailPage(BuildContext context, Proposal? proposal) async {
+  void _navigateToReportDetailPage(BuildContext context, Proposal? proposal) async {
     if (proposal == null) return;
     await Navigator.push(
       context,
@@ -50,7 +52,7 @@ class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
     getAllProposal();
   }
 
-  void _showDeleteConfirmationSheet(BuildContext context, int index) {
+  void _showDeleteReportConfirmationSheet(BuildContext context, int index) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -104,8 +106,8 @@ class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      _handleDeleteRow(index);
                       Navigator.of(context).pop(true);
+                      deleteProposal(_filteredRows?[index].proposalCode);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
@@ -133,12 +135,16 @@ class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
     final filters = await Navigator.push<Map<String, String>>(
       context,
       MaterialPageRoute(
-        builder: (context) => ReportFilterScreen(
+        builder: (context) => FilterScreen(
+          type: SearchType.report,
           onApplyFilter: (filters) {
+            print("_navigateToFilterPage");
+            print("$filters");
             setState(() {
               _filteredRows = _rows?.where((row) {
-                bool matchesStatus = row.status == filters['status']!;
-                bool matchesSigner = row.signer?.contains(filters['signer']!) ?? false;
+                bool matchesStatus = TextUtils.isEmpty(filters['status']) ? true : row.status == (filters['status']! == "Đã ký");
+                print("matchesStatus $matchesStatus");
+                bool matchesSigner = TextUtils.isEmpty(filters['signer']) ? true : row.signer?.contains(filters['signer']!) ?? false;
                 // bool matchesSigner = row.signer?.contains(filters['signer']!) ?? false;
                 return matchesStatus && matchesSigner;
               }).toList();
@@ -195,7 +201,7 @@ class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const SearchHome(),
+                                      builder: (context) => const SearchScreen(type: SearchType.report),
                                     ),
                                   );
                                 },
@@ -362,7 +368,7 @@ class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
                                                       const Color(0xFF4285F4),
                                                   child: GestureDetector(
                                                     onTap: () {
-                                                      _navigateToDetailPage(
+                                                      _navigateToReportDetailPage(
                                                           context,
                                                           _filteredRows?[
                                                               index]);
@@ -400,7 +406,7 @@ class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
                                                       const Color(0xFFFC4D4D),
                                                   child: GestureDetector(
                                                     onTap: () {
-                                                      _showDeleteConfirmationSheet(
+                                                      _showDeleteReportConfirmationSheet(
                                                           context, index);
                                                     },
                                                     child: Column(
@@ -511,6 +517,32 @@ class _ReportScreenState extends State<ReportScreen> with BaseLoadingState {
       if (result) {
         getAllProposal();
       }
+    } catch (e, stackTrace) {
+      print(stackTrace);
+    } finally {
+      progressStream.add(false);
+    }
+  }
+
+
+  Future<void> deleteProposal(String? code) async {
+    progressStream.add(true);
+    // Lấy dữ liệu từ form
+    try {
+      final body = {
+        "proposal_code": code
+      };
+      await apiService.post(ApiUrl.post_delete_proposal(), body: body);
+      final data = await apiService.get(
+        ApiUrl.get_all_proposal(),
+      );
+
+      ProposalResponse response = ProposalResponse.fromJson(data);
+      setState(() {
+        _rows = response.proposal ?? [];
+        _filteredRows = response.proposal ?? [];
+      });
+      ToastUtils.showSuccess("Bạn đã xoá tờ trình thành công!");
     } catch (e, stackTrace) {
       print(stackTrace);
     } finally {

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:home/document_viewer_page.dart';
-import 'package:home/home/dashboard_screen.dart';
 import 'package:home/splash/splash_screen.dart';
 
 import 'authentication/login_screen.dart';
@@ -19,6 +17,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final _navKey = GlobalKey<NavigatorState>();
+
   @override
   void initState() {
     super.initState();
@@ -26,8 +26,7 @@ class _MyAppState extends State<MyApp> {
     unauthorizedStream.stream.distinct().listen((_) {
       print("Unauthorized event received!");
       // Navigate to Login Screen
-      Navigator.pushAndRemoveUntil(
-        context,
+      _navKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
         (route) => false, // Clear all previous routes
       );
@@ -37,6 +36,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navKey,
       debugShowCheckedModeBanner: false,
       debugShowMaterialGrid: false,
       theme: ThemeData(

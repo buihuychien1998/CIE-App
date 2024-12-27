@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:home/home/dashboard_screen.dart';
-import 'package:home/home/search_home.dart';
+import 'package:home/search/search_screen.dart';
 import 'package:home/models/employee_response.dart';
 import 'package:home/report/report_screen.dart';
 import 'package:home/topic/topic_screen.dart';
 import 'package:home/staff/staff_detail_screen.dart';
-import 'package:home/staff/staff_filter.dart';
 import 'package:home/staff/staff_create_screen.dart';
 
 import '../base/api_url.dart';
 import '../base/base_loading_state.dart';
+import '../constants/app_constants.dart';
 import '../constants/size_constants.dart';
+import '../search/filter_screen.dart';
+import '../utils/toast_utils.dart';
 
 class StaffScreen extends StatefulWidget {
   const StaffScreen({Key? key}) : super(key: key);
@@ -31,14 +33,7 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
     _filteredRows = _rows;
   }
 
-  void _handleDeleteRow(int index) {
-    setState(() {
-      _rows?.removeAt(index);
-      _filteredRows?.removeAt(index);
-    });
-  }
-
-  void _navigateToDetailPage(BuildContext context, Employee? staff) async{
+  void _navigateToStaffDetailPage(BuildContext context, Employee? staff) async{
     if (staff == null) return;
     await Navigator.push(
       context,
@@ -51,7 +46,7 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
     getAllEmployee();
   }
 
-  void _showDeleteConfirmationSheet(BuildContext context, int index) {
+  void _showDeleteStaffConfirmationSheet(BuildContext context, int index) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -105,8 +100,8 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      _handleDeleteRow(index);
                       Navigator.of(context).pop(true);
+                      deleteStaff(_filteredRows?[index].employCode);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
@@ -134,7 +129,8 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
     final filters = await Navigator.push<Map<String, String>>(
       context,
       MaterialPageRoute(
-        builder: (context) => StaffFilter(
+        builder: (context) => FilterScreen(
+          type: SearchType.staff,
           onApplyFilter: (filters) {
             setState(() {
               _filteredRows = _rows?.where((row) {
@@ -198,7 +194,7 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => SearchHome(),
+                                      builder: (context) => SearchScreen(type: SearchType.staff),
                                     ),
                                   );
                                 },
@@ -294,8 +290,6 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
                                     ],
                                     rows: List.generate(
                                         _filteredRows?.length ?? 0, (index) {
-                                      final isExpanded =
-                                          _expandedRowIndex == index;
                                       Employee? employee =
                                           _filteredRows?[index];
 
@@ -348,7 +342,7 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
                                                       const Color(0xFF4285F4),
                                                   child: GestureDetector(
                                                     onTap: () {
-                                                      _navigateToDetailPage(
+                                                      _navigateToStaffDetailPage(
                                                           context,
                                                           _filteredRows?[
                                                               index]);
@@ -386,7 +380,7 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
                                                       const Color(0xFFFC4D4D),
                                                   child: GestureDetector(
                                                     onTap: () {
-                                                      _showDeleteConfirmationSheet(
+                                                      _showDeleteStaffConfirmationSheet(
                                                           context, index);
                                                     },
                                                     child: Column(
@@ -480,27 +474,28 @@ class _StaffScreenState extends State<StaffScreen> with BaseLoadingState {
     }
   }
 
-  Future<void> deleteStaff() async {
-    showLoading();
+  Future<void> deleteStaff(String? code) async {
+    progressStream.add(true);
     // Lấy dữ liệu từ form
     try {
       final body = {
-        "employ_code": ""
+        "employ_code": code
       };
-      final data = await apiService.post(ApiUrl.post_delete_employee(), body: body);
+      await apiService.post(ApiUrl.post_delete_employee(), body: body);
+      final data = await apiService.get(
+        ApiUrl.get_all_employee(),
+      );
 
-      // StaffCreateResponse response = StaffCreateResponse.fromJson(data);
-      // if (response.employee?.id != null) {
-      //   ToastUtils.showSuccess("Bạn đã thêm nhân sự thành công!");
-      //   Navigator.pop(context, true);
-      // } else {
-      //   ToastUtils.showError(
-      //       "Thêm nhân sự không thành công. Vui lòng kiểm tra và thử lại!");
-      // }
+      EmployeeResponse response = EmployeeResponse.fromJson(data);
+      setState(() {
+        _rows = response.employee ?? [];
+        _filteredRows = response.employee ?? [];
+      });
+      ToastUtils.showSuccess("Bạn đã xoá nhân sự thành công!");
     } catch (e, stackTrace) {
       print(stackTrace);
     } finally {
-      hideLoading();
+      progressStream.add(false);
     }
   }
 

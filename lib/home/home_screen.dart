@@ -3,8 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:home/base/base_loading_state.dart';
 import 'package:home/database/database_home.dart';
 import 'package:home/models/reports.dart';
-import 'package:home/home/home_filter.dart';
-import 'package:home/home/search_home.dart';
+import 'package:home/search/search_screen.dart';
 import 'package:home/topic/topic_create_screen.dart';
 import 'package:home/staff/staff_create_screen.dart';
 
@@ -14,17 +13,18 @@ import '../constants/size_constants.dart';
 import '../models/employee_response.dart';
 import '../models/user_profile_response.dart';
 import '../report/report_create_screen.dart';
+import '../search/filter_screen.dart';
 import '../utils/toast_utils.dart';
 import 'dashboard_screen.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with BaseLoadingState {
+class HomePageState extends State<HomePage> with BaseLoadingState {
   late Future<List<Reports>> _reportsFuture;
 
   @override
@@ -134,7 +134,7 @@ class _HomePageState extends State<HomePage> with BaseLoadingState {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const SearchHome(),
+            builder: (context) => const SearchScreen(type: SearchType.all),
           ),
         );
       },
@@ -173,7 +173,12 @@ class _HomePageState extends State<HomePage> with BaseLoadingState {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => HomeFilter()),
+                MaterialPageRoute(
+                  builder: (context) => FilterScreen(
+                    onApplyFilter: (filters) {},
+                    type: SearchType.all,
+                  ),
+                ),
               );
             },
             style: OutlinedButton.styleFrom(

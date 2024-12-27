@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:home/home/dashboard_screen.dart';
-import 'package:home/home/search_home.dart';
+import 'package:home/search/search_screen.dart';
 import 'package:home/report/report_screen.dart';
 import 'package:home/topic/topic_screen.dart';
 import 'package:home/staff/staff_screen.dart';
@@ -268,7 +268,7 @@ class _SettingScreenState extends State<SettingScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => SearchHome(),
+                                    builder: (context) => SearchScreen(type: SearchType.all),
                                   ),
                                 );
                               },

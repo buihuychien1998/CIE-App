@@ -8,6 +8,7 @@ final storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
 const TOKEN = "token";
 const EMAIL = "email";
 const PASSWORD = "password";
+const SEARCH_HISTORY = "search_history";
 const REMEMBER_PASSWORD = "remember_password";
 
 // to save token in local storage

@@ -1,25 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:home/home/dashboard_screen.dart';
-import 'package:home/home/search_home.dart';
+import 'package:home/search/filter_screen.dart';
+import 'package:home/search/search_screen.dart';
 import 'package:home/models/topic_response.dart';
 import 'package:home/report/report_screen.dart';
 import 'package:home/topic/topic_detail_screen.dart';
-import 'package:home/topic/topic_filter.dart';
 import 'package:home/topic/topic_create_screen.dart';
 import 'package:home/staff/staff_screen.dart';
 
 import '../base/api_url.dart';
 import '../base/base_loading_state.dart';
+import '../constants/app_constants.dart';
 import '../constants/size_constants.dart';
+import '../utils/toast_utils.dart';
 
 class TopicScreen extends StatefulWidget {
-  const TopicScreen({Key? key}) : super(key: key);
+  const TopicScreen({super.key});
 
   @override
-  _TopicScreenState createState() => _TopicScreenState();
+  TopicScreenState createState() => TopicScreenState();
 }
 
-class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
+class TopicScreenState extends State<TopicScreen> with BaseLoadingState {
   List<Topic>? _rows;
   List<Topic>? _filteredRows;
   int? _expandedRowIndex;
@@ -31,14 +33,8 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
     _filteredRows = _rows;
   }
 
-  void _handleDeleteRow(int index) {
-    setState(() {
-      _rows?.removeAt(index);
-      _filteredRows?.removeAt(index);
-    });
-  }
 
-  void _navigateToDetailPage(BuildContext context, Topic? topic) async{
+  void _navigateToTopicDetailPage(BuildContext context, Topic? topic) async{
     if (topic == null) return;
     await Navigator.push(
       context,
@@ -51,7 +47,7 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
     getAllTopic();
   }
 
-  void _showDeleteConfirmationSheet(BuildContext context, int index) {
+  void _showDeleteTopicConfirmationSheet(BuildContext context, int index) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -105,8 +101,8 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      _handleDeleteRow(index);
                       Navigator.of(context).pop(true);
+                      deleteTopic(_filteredRows?[index].topicCode);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
@@ -134,7 +130,7 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
     final filters = await Navigator.push<Map<String, String>>(
       context,
       MaterialPageRoute(
-        builder: (context) => TopicFilter(
+        builder: (context) => FilterScreen(
           onApplyFilter: (filters) {
             setState(() {
               _filteredRows = _rows?.where((row) {
@@ -144,7 +140,7 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
                 return true;
               }).toList();
             });
-          },
+          }, type: SearchType.topic,
         ),
       ),
     );
@@ -196,7 +192,7 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => SearchHome(),
+                                      builder: (context) => SearchScreen(type: SearchType.topic),
                                     ),
                                   );
                                 },
@@ -338,7 +334,7 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
                                             color: const Color(0xFF4285F4),
                                             child: GestureDetector(
                                               onTap: () {
-                                                _navigateToDetailPage(context,
+                                                _navigateToTopicDetailPage(context,
                                                     _filteredRows?[index]);
                                               },
                                               child: Column(
@@ -370,7 +366,7 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
                                             color: const Color(0xFFFC4D4D),
                                             child: GestureDetector(
                                               onTap: () {
-                                                _showDeleteConfirmationSheet(
+                                                _showDeleteTopicConfirmationSheet(
                                                     context, index);
                                               },
                                               child: Column(
@@ -455,6 +451,31 @@ class _TopicScreenState extends State<TopicScreen> with BaseLoadingState {
         _rows = response.topic ?? [];
         _filteredRows = response.topic ?? [];
       });
+    } catch (e, stackTrace) {
+      print(stackTrace);
+    } finally {
+      progressStream.add(false);
+    }
+  }
+
+  Future<void> deleteTopic(String? code) async {
+    progressStream.add(true);
+    // Lấy dữ liệu từ form
+    try {
+      final body = {
+        "topic_code": code
+      };
+      await apiService.post(ApiUrl.post_delete_topic(), body: body);
+      final data = await apiService.get(
+        ApiUrl.get_all_topic(),
+      );
+
+      TopicResponse response = TopicResponse.fromJson(data);
+      setState(() {
+        _rows = response.topic ?? [];
+        _filteredRows = response.topic ?? [];
+      });
+      ToastUtils.showSuccess("Bạn đã xoá đề tài thành công!");
     } catch (e, stackTrace) {
       print(stackTrace);
     } finally {
