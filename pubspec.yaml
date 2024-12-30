@@ -50,6 +50,7 @@ dependencies:
   fluttertoast: ^8.2.10
   flutter_secure_storage: ^9.2.2
   dropdown_button2: ^2.3.9
+  graphic: ^2.5.0
 
 dev_dependencies:
   flutter_test:

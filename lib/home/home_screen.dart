@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:graphic/graphic.dart';
 import 'package:home/base/base_loading_state.dart';
 import 'package:home/database/database_home.dart';
 import 'package:home/models/reports.dart';
@@ -11,6 +12,9 @@ import '../base/api_url.dart';
 import '../constants/app_constants.dart';
 import '../constants/size_constants.dart';
 import '../models/employee_response.dart';
+import '../models/proposal_response.dart';
+import '../models/topic_response.dart';
+import '../models/chart_response.dart' as chart;
 import '../models/user_profile_response.dart';
 import '../report/report_create_screen.dart';
 import '../search/filter_screen.dart';
@@ -26,12 +30,16 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> with BaseLoadingState {
   late Future<List<Reports>> _reportsFuture;
+  List<Proposal> proposals = [];
+  List<Topic> topics = [];
+  List<Employee> staff = [];
+  List<Map> chartData = [];
 
   @override
   void initState() {
     super.initState();
     _reportsFuture = DatabaseService().getReports();
-    getUserProfile();
+    _fetchAllData();
   }
 
   @override
@@ -46,21 +54,7 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
           marginH20,
           _buildCategoryRows(),
           marginH24,
-          FutureBuilder<List<Reports>>(
-            future: _reportsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text('No data available'));
-              } else {
-                List<Reports> reports = snapshot.data!;
-                return _buildBarChart(reports);
-              }
-            },
-          ),
+          _buildBarChart(),
         ],
       ),
     );
@@ -174,10 +168,11 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => FilterScreen(
-                    onApplyFilter: (filters) {},
-                    type: SearchType.all,
-                  ),
+                  builder: (context) =>
+                      FilterScreen(
+                        onApplyFilter: (filters) {},
+                        type: SearchType.all,
+                      ),
                 ),
               );
             },
@@ -211,7 +206,7 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
             child: _buildCategoryCard(
               title: 'Tờ trình',
               image: 'assets/images/image1.png',
-              count: 13,
+              count: proposals.length,
             ),
           ),
         ),
@@ -228,7 +223,7 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
             child: _buildCategoryCard(
               title: 'Đề tài',
               image: 'assets/images/image2.png',
-              count: 23,
+              count: topics.length,
             ),
           ),
         ),
@@ -245,7 +240,7 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
             child: _buildCategoryCard(
               title: 'Nhân sự',
               image: 'assets/images/image3.png',
-              count: 42,
+              count: staff.length,
             ),
           ),
         ),
@@ -334,7 +329,7 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
     );
   }
 
-  Widget _buildBarChart(List<Reports> reports) {
+  Widget _buildBarChart() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -347,30 +342,24 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
           ),
         ),
         marginH20,
-        SizedBox(
+        chartData.isEmpty ? const SizedBox.shrink() : SizedBox(
           width: double.infinity,
           height: 200,
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceAround,
-              maxY: reports
-                      .map((report) => report.quantity.toDouble())
-                      .reduce((a, b) => a > b ? a : b) +
-                  10,
-              barGroups: reports.map((report) {
-                return BarChartGroupData(
-                  x: report.year - 2021,
-                  barRods: [
-                    BarChartRodData(
-                      toY: report.quantity.toDouble(),
-                      color: const Color(0xFF8DB8FF),
-                      width: 30,
-                      borderRadius: BorderRadius.circular(0),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
+          child: Chart(
+            data: chartData,
+            variables: {
+              'Năm': Variable(
+                accessor: (Map map) => map['year'] as String,
+              ),
+              'Số lượng': Variable(
+                accessor: (Map map) => map['count'] as num,
+              ),
+            },
+            marks: [IntervalMark()],
+            axes: [
+              Defaults.horizontalAxis,
+              Defaults.verticalAxis,
+            ],
           ),
         ),
         marginH24,
@@ -406,15 +395,16 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
               DataColumn(label: Flexible(child: Text('Trạng thái'))),
             ],
             rows: List.generate(
-              reports.length,
-              (index) {
+              proposals.length,
+                  (index) {
+                Proposal item = proposals[index];
                 return DataRow(cells: [
                   DataCell(Text('${index + 1}')),
-                  DataCell(Text('Tờ trình ${index + 1}')),
+                  DataCell(Text(item.proposalCode ?? "")),
                   // Replace with actual data
-                  DataCell(Text('Người ký ${index + 1}')),
+                  DataCell(Text(item.signer ?? "")),
                   // Replace with actual data
-                  DataCell(Text('Trạng thái ${index + 1}')),
+                  DataCell(Text(item.status == true ? "Đã ký" : "Chưa ký")),
                   // Replace with actual data
                 ]);
               },
@@ -423,6 +413,76 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
         ),
       ],
     );
+  }
+
+  Future<void> _fetchAllData() async {
+    progressStream.add(true);
+    try {
+      await Future.wait(
+          [
+            getAllProposal(),
+            getAllTopic(),
+            getAllStaff(),
+            getChartData(),
+            getUserProfile()
+          ]);
+    } catch (e, stackTrace) {
+      print("Error fetching data: $e");
+      print(stackTrace);
+    } finally {
+      progressStream.add(false);
+    }
+  }
+
+  Future<void> getAllProposal() async {
+    try {
+      final data = await apiService.get(ApiUrl.get_all_proposal());
+      ProposalResponse response = ProposalResponse.fromJson(data);
+      setState(() {
+        proposals = response.proposal ?? [];
+      });
+    } catch (e, stackTrace) {
+      print(stackTrace);
+    }
+  }
+
+  Future<void> getAllTopic() async {
+    try {
+      final data = await apiService.get(ApiUrl.get_all_topic());
+      TopicResponse response = TopicResponse.fromJson(data);
+      setState(() {
+        topics = response.topic ?? [];
+      });
+    } catch (e, stackTrace) {
+      print(stackTrace);
+    }
+  }
+
+  Future<void> getAllStaff() async {
+    try {
+      final data = await apiService.get(ApiUrl.get_all_employee());
+      EmployeeResponse response = EmployeeResponse.fromJson(data);
+      setState(() {
+        staff = response.employee ?? [];
+      });
+    } catch (e, stackTrace) {
+      print(stackTrace);
+    }
+  }
+
+  Future<void> getChartData() async {
+    try {
+      final data = await apiService.get(ApiUrl.get_chart_data());
+      chart.ChartResponse response = chart.ChartResponse.fromJson(data);
+      setState(() {
+        chartData = [];
+        for (var item in (response.topic ?? [])) {
+          chartData.add(item.toJson());
+        }
+      });
+    } catch (e, stackTrace) {
+      print(stackTrace);
+    }
   }
 
   Future<void> getAllEmployee() async {
@@ -442,9 +502,10 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
       var result = await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ReportCreateScreen(
-            employee: response.employee ?? [],
-          ), // Điều hướng đến trang AddReport
+          builder: (context) =>
+              ReportCreateScreen(
+                employee: response.employee ?? [],
+              ), // Điều hướng đến trang AddReport
         ),
       );
     } catch (e, stackTrace) {
@@ -455,8 +516,6 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
   }
 
   Future<void> getUserProfile() async {
-    progressStream.add(true);
-
     // Lấy dữ liệu từ form
     try {
       final data = await apiService.get(
@@ -467,8 +526,6 @@ class HomePageState extends State<HomePage> with BaseLoadingState {
       AppConstant.profile = response.profile;
     } catch (e, stackTrace) {
       print(stackTrace);
-    } finally {
-      progressStream.add(false);
-    }
+    } finally {}
   }
 }

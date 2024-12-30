@@ -109,13 +109,12 @@ class ApiService {
         return jsonDecode(response.body);
       }
       return null;
+    } else if (response.statusCode == 401) {
+      // Handle Unauthorized Error (401)
+      // Perform logout or token invalidation
+      _handleUnauthorized();
+      // throw Exception('Unauthorized access. Please log in again.');
     }
-    // else if (response.statusCode == 401) {
-    //   // Handle Unauthorized Error (401)
-    //   // Perform logout or token invalidation
-    //   _handleUnauthorized();
-    //   throw Exception('Unauthorized access. Please log in again.');
-    // }
     else {
       // Handle other errors
       throw Exception('Error: ${response.statusCode} - ${response.body}');
@@ -135,7 +134,7 @@ class ApiService {
     // );
 
     // Broadcast the unauthorized event
-    unauthorizedStream.add(null);
+    // unauthorizedStream.add(null);
 
     // Optionally, show a toast message
     ToastUtils.showError('Session expired. Please log in again.');

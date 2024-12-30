@@ -29,4 +29,6 @@ class ApiUrl{
   static post_update_employee() => 'api/v1/employee/update';
   static post_delete_employee() => 'api/v1/employee/delete';
 
+  //Chart
+  static get_chart_data() => 'api/chart_data';
 }
