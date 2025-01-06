@@ -1,6 +1,6 @@
 class ApiUrl{
   // static String baseUrl = 'http://localhost:3002/';
-  static String baseUrl = 'http://192.168.1.42:3000/';
+  static String baseUrl = 'http://192.168.1.55:3000/';
 
   //Authentication
   static post_login() => 'api/login';
