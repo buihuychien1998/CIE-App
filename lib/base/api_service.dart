@@ -94,7 +94,7 @@ class ApiService {
       log('Response Status: ${response.statusCode}'); // Log status code
       log('Response Body: ${response.body}'); // Log response body
 
-      return _handleResponse(response);
+      return _handleResponse(uri, response);
     } catch (e, stacktrace) {
       log('Error: $e'); // Log error
       ToastUtils.showError('Error: $e'); // Show error toast
@@ -103,7 +103,7 @@ class ApiService {
   }
 
   // Handle HTTP responses
-  dynamic _handleResponse(http.Response response) {
+  dynamic _handleResponse(uri, http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isNotEmpty) {
         return jsonDecode(response.body);
@@ -112,10 +112,13 @@ class ApiService {
     } else if (response.statusCode == 401) {
       // Handle Unauthorized Error (401)
       // Perform logout or token invalidation
+      if (uri.toString().contains("login")) {
+        ToastUtils.showError('Thông tin tài khoản hoặc mật khẩu không chính xác. Vui lòng kiểm tra và thử lại!');
+        return;
+      }
       _handleUnauthorized();
       // throw Exception('Unauthorized access. Please log in again.');
-    }
-    else {
+    } else {
       // Handle other errors
       throw Exception('Error: ${response.statusCode} - ${response.body}');
     }
@@ -137,6 +140,6 @@ class ApiService {
     // unauthorizedStream.add(null);
 
     // Optionally, show a toast message
-    ToastUtils.showError('Session expired. Please log in again.');
+    ToastUtils.showError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
   }
 }
