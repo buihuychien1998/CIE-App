@@ -97,7 +97,7 @@ class ApiService {
       return _handleResponse(response);
     } catch (e, stacktrace) {
       log('Error: $e'); // Log error
-      ToastUtils.showError('Error: ${e.toString()}'); // Show error toast
+      ToastUtils.showError('Error: $e'); // Show error toast
       throw Exception('API request failed: $stacktrace');
     }
   }

@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:home/authentication/enter_otp.dart';
+import 'package:home/authentication/enter_otp_screen.dart';
 import 'package:home/authentication/login_screen.dart';
+import 'package:home/base/base_loading_state.dart';
+import 'package:home/extension/string_extension.dart';
 
-class ForgetPassword extends StatefulWidget {
-  ForgetPassword({Key? key}) : super(key: key);
+import '../base/api_url.dart';
+import '../constants/text_style.dart';
+import '../models/send_otp_response.dart';
 
-  final TextEditingController _emailController = TextEditingController();
+class ForgetPasswordScreen extends StatefulWidget {
+  const ForgetPasswordScreen({super.key});
 
   @override
-  _ForgetPasswordState createState() => _ForgetPasswordState();
+  ForgetPasswordScreenState createState() => ForgetPasswordScreenState();
 }
 
-class _ForgetPasswordState extends State<ForgetPassword> with WidgetsBindingObserver {
+class ForgetPasswordScreenState extends State<ForgetPasswordScreen> with WidgetsBindingObserver, BaseLoadingState {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final FocusNode _emailFocusNode = FocusNode();
   String? _email;
@@ -45,22 +49,47 @@ class _ForgetPasswordState extends State<ForgetPassword> with WidgetsBindingObse
     });
   }
 
-  void _submitForm(BuildContext context) {
+  void _submitForm(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Colors.blue,
-          content: Text('Gửi yêu cầu khôi phục mật khẩu thành công'),
-        ),
-      );
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EnterOTP(email: _email!), // Truyền email vào đây
-        ),
-      );
+      FocusScope.of(context).unfocus();
+      showLoading(); // Show the loading indicator
+
+      // Lấy dữ liệu từ form
+      final email = _email;
+
+      // Tạo payload cho yêu cầu HTTP
+      final Map<String, dynamic> body = {
+        'mail': email,
+      };
+
+      try {
+        final data = await apiService.post(
+          ApiUrl.post_send_otp(),
+          body: body,
+        );
+
+        hideLoading(); // Hide the loading indicator
+
+        SendOtpResponse response = SendOtpResponse.fromJson(data);
+        if (response.message?.isNotEmpty ?? false) {
+          bool result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EnterOTPScreen(email: _email!), // Truyền email vào đây
+            ),
+          );
+          if(result){
+            Navigator.pop(context);
+          }
+        }
+      } catch (e, stackTrace) {
+        print(stackTrace);
+        hideLoading(); // Hide the loading indicator in case of an error
+      }
     }
   }
+
+
 
   bool get _isFormValid {
     return _formKey.currentState?.validate() ?? false;
@@ -68,7 +97,7 @@ class _ForgetPasswordState extends State<ForgetPassword> with WidgetsBindingObse
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return buildWithLoading(child: Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -122,10 +151,12 @@ class _ForgetPasswordState extends State<ForgetPassword> with WidgetsBindingObse
                   children: [
                     TextFormField(
                       focusNode: _emailFocusNode,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       validator: (value) {
-                        final emailPattern = RegExp(r'^[a-zA-Z0-9._%+-]+@stu\.ptit\.edu\.vn$');
-                        if (value != null && !emailPattern.hasMatch(value)) {
-                          return 'Email phải bao gồm "@stu.ptit.edu.vn"';
+                        if (value == null || value.isEmpty) {
+                          return 'Email không được để trống.';
+                        } else if (!value.trim().isValidEmail()) {
+                          return 'Email không hợp lệ.';
                         }
                         return null;
                       },
@@ -138,26 +169,18 @@ class _ForgetPasswordState extends State<ForgetPassword> with WidgetsBindingObse
                         labelText: 'Email',
                         hintText: 'Nhập email của bạn',
                         hintStyle: const TextStyle(color: Colors.grey),
-                        border: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Colors.grey,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 17),
+                        focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.blue)),
+                        errorBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red)),
+                        focusedErrorBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Colors.grey,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: _email != null && _email!.contains('@stu.ptit.edu.vn')
-                                ? Colors.blueAccent
-                                : Colors.grey,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        enabledBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.grey)),
+                        errorStyle: errorStyle,
                       ),
                     ),
                     const SizedBox(height: 60),
@@ -185,6 +208,6 @@ class _ForgetPasswordState extends State<ForgetPassword> with WidgetsBindingObse
           ),
         ),
       ),
-    );
+    ));
   }
 }

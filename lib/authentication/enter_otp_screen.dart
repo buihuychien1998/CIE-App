@@ -1,26 +1,29 @@
 import 'dart:async'; // Để sử dụng Timer
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:home/authentication/forget_password.dart';
-import 'package:home/authentication/change_password.dart';
+import 'package:home/authentication/forget_password_screen.dart';
+import 'package:home/authentication/change_password_screen.dart';
+import 'package:home/base/base_loading_state.dart';
 
-class EnterOTP extends StatefulWidget {
+import '../base/api_url.dart';
+import '../models/send_otp_response.dart';
+
+class EnterOTPScreen extends StatefulWidget {
   final String email; // Thêm thuộc tính email
 
-  EnterOTP({Key? key, required this.email}) : super(key: key);
+  const EnterOTPScreen({super.key, required this.email});
 
   @override
-  _EnterOTPState createState() => _EnterOTPState();
+  EnterOTPScreenState createState() => EnterOTPScreenState();
 }
 
-class _EnterOTPState extends State<EnterOTP> {
+class EnterOTPScreenState extends State<EnterOTPScreen> with BaseLoadingState {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final List<TextEditingController> _otpControllers = List.generate(4, (_) => TextEditingController());
   late Timer _timer;
   int _start = 120;
   bool _isResendEnabled = false;
   bool _isCountdownVisible = true;
-  bool _isKeyboardVisible = false;
 
   bool get _isFormValid {
     // Kiểm tra nếu tất cả các trường OTP đều đã được nhập
@@ -46,9 +49,39 @@ class _EnterOTPState extends State<EnterOTP> {
     });
   }
 
-  void _resendCode() {
+  void _resendCode(BuildContext context) {
     if (_isResendEnabled) {
-      _startTimer();
+      sendOtp(context);
+    }
+  }
+
+  void sendOtp(BuildContext context) async {
+    FocusScope.of(context).unfocus();
+    showLoading(); // Show the loading indicator
+
+    // Lấy dữ liệu từ form
+    final email = widget.email;
+
+    // Tạo payload cho yêu cầu HTTP
+    final Map<String, dynamic> body = {
+      'mail': email,
+    };
+
+    try {
+      final data = await apiService.post(
+        ApiUrl.post_send_otp(),
+        body: body,
+      );
+
+      hideLoading(); // Hide the loading indicator
+
+      SendOtpResponse response = SendOtpResponse.fromJson(data);
+      if (response.message?.isNotEmpty ?? false) {
+        _startTimer();
+      }
+    } catch (e, stackTrace) {
+      print(stackTrace);
+      hideLoading(); // Hide the loading indicator in case of an error
     }
   }
 
@@ -68,18 +101,20 @@ class _EnterOTPState extends State<EnterOTP> {
     super.dispose();
   }
 
-  void _submitForm(BuildContext context) {
+  void _submitForm(BuildContext context) async{
     if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Colors.blue,
-          content: Text('OTP đã được xác nhận thành công'),
+      FocusScope.of(context).unfocus();
+
+      // Combine the OTP fields into a single string
+      final otp = _otpControllers.map((controller) => controller.text).join();
+
+      bool result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChangePasswordScreen(email: widget.email, otp: otp),
         ),
       );
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ChangePassword()),
-      );
+      Navigator.pop(context, result);
     }
   }
 
@@ -95,7 +130,7 @@ class _EnterOTPState extends State<EnterOTP> {
           icon: const Icon(Icons.arrow_back, size: 24),
           onPressed: () {
             Navigator.push(context,
-                MaterialPageRoute(builder: (context) => ForgetPassword()));
+                MaterialPageRoute(builder: (context) => ForgetPasswordScreen()));
           },
         ),
       ),
@@ -209,7 +244,7 @@ class _EnterOTPState extends State<EnterOTP> {
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: _resendCode,
+                    onTap: () => _resendCode(context),
                     child: Text.rich(
                       TextSpan(
                         children: [

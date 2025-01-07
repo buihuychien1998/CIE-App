@@ -1,34 +1,61 @@
 import 'package:flutter/material.dart';
-import 'package:home/authentication/enter_otp.dart';
+import 'package:home/authentication/enter_otp_screen.dart';
 import 'package:home/authentication/login_screen.dart';
+import 'package:home/base/base_loading_state.dart';
+import 'package:home/utils/toast_utils.dart';
 
-class ChangePassword extends StatefulWidget {
-  const ChangePassword({Key? key}) : super(key: key);
+import '../base/api_url.dart';
+import '../constants/text_style.dart';
+import '../models/send_otp_response.dart';
+
+class ChangePasswordScreen extends StatefulWidget {
+  final String email;
+  final String otp;
+
+  const ChangePasswordScreen({super.key, required this.email, required this.otp});
 
   @override
-  _ChangePasswordState createState() => _ChangePasswordState();
+  _ChangePasswordScreenState createState() => _ChangePasswordScreenState();
 }
 
-class _ChangePasswordState extends State<ChangePassword> {
+class _ChangePasswordScreenState extends State<ChangePasswordScreen> with BaseLoadingState{
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool obscurePassword = true;
+  bool obscureConfirmPassword = true;
   String? _newPassword;
-  String? _confirmPassword;
-  bool _isNewPasswordValid = false;
 
-  void _submitForm(BuildContext context) {
+  void _submitForm(BuildContext context) async{
     if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Colors.blue,
-          content: Text('Đặt lại mật khẩu thành công'),
-        ),
-      );
-      // Navigate back to Login screen after changing password
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
+      FocusScope.of(context).unfocus();
+      showLoading(); // Show the loading indicator
+
+      // Lấy dữ liệu từ form
+      final email = widget.email;
+
+      // Tạo payload cho yêu cầu HTTP
+      final Map<String, dynamic> body = {
+        'mail': email,
+        "otp": widget.otp,
+        "newPass" : _newPassword
+      };
+
+      try {
+        final data = await apiService.post(
+          ApiUrl.post_reset_password(),
+          body: body,
+        );
+
+        hideLoading(); // Hide the loading indicator
+
+        SendOtpResponse response = SendOtpResponse.fromJson(data);
+        if (response.message?.isNotEmpty ?? false) {
+          ToastUtils.showSuccess("Mật khẩu của bạn đã được thay đổi thành công! Bạn có thể sử dụng mật khẩu mới để đăng nhập.");
+          Navigator.pop(context, true);
+        }
+      } catch (e, stackTrace) {
+        print(stackTrace);
+        hideLoading(); // Hide the loading indicator in case of an error
+      }
     }
   }
 
@@ -37,7 +64,7 @@ class _ChangePasswordState extends State<ChangePassword> {
     // Track whether the keyboard is visible
     final bool isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
 
-    return Scaffold(
+    return buildWithLoading(child: Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -47,7 +74,7 @@ class _ChangePasswordState extends State<ChangePassword> {
             // Provide a valid email value for EnterOTP
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => EnterOTP(email: 'example@example.com')), // Provide a valid email here
+              MaterialPageRoute(builder: (context) => EnterOTPScreen(email: 'example@example.com')), // Provide a valid email here
             );
           },
         ),
@@ -96,7 +123,6 @@ class _ChangePasswordState extends State<ChangePassword> {
                     onChanged: (value) {
                       setState(() {
                         _newPassword = value;
-                        _isNewPasswordValid = value.length >= 8;
                       });
                     },
                     validator: (value) {
@@ -111,18 +137,18 @@ class _ChangePasswordState extends State<ChangePassword> {
                       labelText: 'Nhập mật khẩu mới',
                       hintText: 'Nhập mật khẩu mới của bạn',
                       hintStyle: const TextStyle(color: Colors.black54),
-                      border: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                          color: Colors.black12,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 17),
+                      focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue)),
+                      errorBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red)),
+                      focusedErrorBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                          color: Colors.black12,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      enabledBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey)),
+                      errorStyle: errorStyle,
                       suffixIcon: IconButton(
                         icon: Icon(
                           obscurePassword
@@ -140,17 +166,12 @@ class _ChangePasswordState extends State<ChangePassword> {
                   ),
                   const SizedBox(height: 20),
                   TextFormField(
-                    obscureText: obscurePassword,
+                    obscureText: obscureConfirmPassword,
                     obscuringCharacter: '*',
-                    onChanged: (value) {
-                      setState(() {
-                        _confirmPassword = value;
-                      });
-                    },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Vui lòng nhập lại mật khẩu';
-                      } else if (_isNewPasswordValid && value != _newPassword) {
+                      } else if (value != _newPassword) {
                         return 'Mật khẩu nhập lại không khớp';
                       }
                       return null;
@@ -159,28 +180,28 @@ class _ChangePasswordState extends State<ChangePassword> {
                       labelText: 'Nhập lại mật khẩu mới',
                       hintText: 'Nhập lại mật khẩu mới của bạn',
                       hintStyle: const TextStyle(color: Colors.black54),
-                      border: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                          color: Colors.black12,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 17),
+                      focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue)),
+                      errorBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red)),
+                      focusedErrorBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                          color: Colors.black12,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      enabledBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey)),
+                      errorStyle: errorStyle,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          obscurePassword
+                          obscureConfirmPassword
                               ? Icons.visibility_off
                               : Icons.visibility,
                           color: Colors.grey,
                         ),
                         onPressed: () {
                           setState(() {
-                            obscurePassword = !obscurePassword;
+                            obscureConfirmPassword = !obscureConfirmPassword;
                           });
                         },
                       ),
@@ -213,6 +234,6 @@ class _ChangePasswordState extends State<ChangePassword> {
           ],
         ),
       ),
-    );
+    ));
   }
 }

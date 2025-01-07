@@ -5,7 +5,7 @@ import 'package:home/base/api_url.dart';
 import 'package:home/constants/secure_storage.dart';
 import 'package:home/constants/text_style.dart';
 import 'package:home/extension/string_extension.dart';
-import 'package:home/authentication/forget_password.dart';
+import 'package:home/authentication/forget_password_screen.dart';
 import 'package:home/home/dashboard_screen.dart';
 import 'package:http/http.dart' as http;
 
@@ -88,7 +88,6 @@ class _LoginScreenState extends State<LoginScreen> with BaseLoadingState {
           body: loginData,
         );
         await Future.delayed(const Duration(milliseconds: 500));
-        print('Fetched users rememberPassword: $rememberPassword');
 
         hideLoading(); // Hide the loading indicator
 
@@ -321,7 +320,7 @@ class _LoginScreenState extends State<LoginScreen> with BaseLoadingState {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => ForgetPassword()),
+                                    builder: (context) => ForgetPasswordScreen()),
                               );
                             },
                           ),
