@@ -259,9 +259,11 @@ class FilterScreenState extends State<FilterScreen> with BaseLoadingState {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  selected.isEmpty ? "Chọn" : selected,
-                  style: const TextStyle(fontSize: 16),
+                Flexible(
+                  child: Text(
+                    selected.isEmpty ? "Chọn" : selected,
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
                 const Icon(Icons.keyboard_arrow_down),
               ],

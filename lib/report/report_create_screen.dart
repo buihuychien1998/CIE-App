@@ -798,13 +798,13 @@ class _InformationTabState extends State<InformationTab>
 
 // Tab Phiên bản
 class VersionTab extends StatefulWidget {
-  const VersionTab({Key? key}) : super(key: key);
+  const VersionTab({super.key});
 
   @override
-  _VersionTabState createState() => _VersionTabState();
+  VersionTabState createState() => VersionTabState();
 }
 
-class _VersionTabState extends State<VersionTab>
+class VersionTabState extends State<VersionTab>
     with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
@@ -1066,7 +1066,10 @@ class _VersionTabState extends State<VersionTab>
                       Icons.calendar_today,
                       color: Colors.grey,
                     ),
-                    onPressed: () => _selectDate(context),
+                    onPressed: () async{
+                      final date = await _selectDate(context);
+                      if (date != null) onSelectDate(date);
+                    },
                   ),
                 ],
               ),

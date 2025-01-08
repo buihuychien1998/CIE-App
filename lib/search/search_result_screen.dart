@@ -1300,7 +1300,7 @@ class SearchResultScreenState extends State<SearchResultScreen>
           final matchesVersion = TextUtils.isEmpty(filters["version"])
               ? true
               : (proposal.version is List &&
-                  (proposal.version as List).contains(filters["version"]));
+              (proposal.version as List).any((version) => version.nameVersion == filters["version"]));
 
           return matchesQuery &&
               matchesStatus &&
