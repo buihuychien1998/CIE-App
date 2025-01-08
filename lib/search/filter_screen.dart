@@ -29,7 +29,7 @@ class FilterScreenState extends State<FilterScreen> with BaseLoadingState {
   String _selectedTopicCode = '';
   String _selectedManagementLevel = '';
   String _selectedPosition = '';
-  String _selectedSex = '';
+  String _selectedStaffCode = '';
 
   List<Proposal> proposals = [];
   List<Topic> topics = [];
@@ -39,7 +39,7 @@ class FilterScreenState extends State<FilterScreen> with BaseLoadingState {
   List<String> topicCodes = [];
   List<String> types = [];
   List<String> positions = [];
-  List<String> sexes = [];
+  List<String> staffCodes = [];
 
   @override
   void initState() {
@@ -223,10 +223,10 @@ class FilterScreenState extends State<FilterScreen> with BaseLoadingState {
                   ),
                   const SizedBox(height: 20),
                   buildDropdownField(
-                    'Giới tính',
-                    sexes,
-                    _selectedSex,
-                        (value) => setState(() => _selectedSex = value),
+                    'Mã nhân viên',
+                    staffCodes,
+                    _selectedStaffCode,
+                        (value) => setState(() => _selectedStaffCode = value),
                   ),
                 ],
               ),
@@ -312,7 +312,7 @@ class FilterScreenState extends State<FilterScreen> with BaseLoadingState {
       case SearchType.staff:
         filters = {
           'position': _selectedPosition,
-          'sex': _selectedSex,
+          'staffCode': _selectedStaffCode,
         };
         break;
 
@@ -379,7 +379,7 @@ class FilterScreenState extends State<FilterScreen> with BaseLoadingState {
       setState(() {
         staff = response.employee ?? [];
         positions = staff.map((e) => e.position ?? '').toSet().toList();
-        sexes = staff.map((e) => e.sex ?? '').toSet().toList();
+        staffCodes = staff.map((e) => e.employCode ?? '').toSet().toList();
         singers = staff.map((e) => e.fullname ?? '').toSet().toList();
       });
     } catch (e, stackTrace) {

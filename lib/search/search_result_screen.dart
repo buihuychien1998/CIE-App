@@ -1341,10 +1341,10 @@ class SearchResultScreenState extends State<SearchResultScreen>
           bool matchesPosition = TextUtils.isEmpty(filters['position'])
               ? true
               : filters['position'] == employee.position;
-          bool matchesSex = TextUtils.isEmpty(filters['sex'])
+          bool matchesCode = TextUtils.isEmpty(filters['staffCode'])
               ? true
-              : filters['sex'] == employee.sex;
-          return matchesQuery && matchesPosition && matchesSex;
+              : filters['staffCode'] == employee.employCode;
+          return matchesQuery && matchesPosition && matchesCode;
         }).toList();
         break;
 
